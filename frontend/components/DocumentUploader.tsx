@@ -13,9 +13,10 @@ interface DocumentUploaderProps {
   projectId: string;
 }
 
-interface FileWithProgress extends File {
-  progress?: number;
-  status?: 'uploading' | 'completed' | 'error';
+interface FileWithProgress {
+  file: File;
+  progress: number;
+  status: 'uploading' | 'completed' | 'error';
   error?: string;
 }
 
@@ -54,7 +55,7 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
     // Handle accepted files
     if (acceptedFiles.length > 0) {
       const newFiles: FileWithProgress[] = acceptedFiles.map(file => ({
-        ...file,
+        file: file,
         progress: 0,
         status: 'uploading' as const,
       }));
@@ -69,7 +70,7 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
     }
   }, []);
 
-  const simulateUpload = (file: FileWithProgress, index: number) => {
+  const simulateUpload = (fileWithProgress: FileWithProgress, index: number) => {
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.random() * 30;
@@ -79,15 +80,15 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
         
         setUploadedFiles(prev => 
           prev.map(f => 
-            f === file 
+            f === fileWithProgress 
               ? { ...f, progress: 100, status: 'completed' as const }
               : f
           )
         );
 
         // Call the completion callback
-        onUploadComplete(file);
-        toast.success(`${file.name || 'File'} uploaded successfully!`);
+        onUploadComplete(fileWithProgress.file);
+        toast.success(`${fileWithProgress.file.name || 'File'} uploaded successfully!`);
         
         // Check if all uploads are complete
         setTimeout(() => {
@@ -102,7 +103,7 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
       } else {
         setUploadedFiles(prev => 
           prev.map(f => 
-            f === file 
+            f === fileWithProgress 
               ? { ...f, progress }
               : f
           )
@@ -124,7 +125,8 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getFileIcon = (file: File) => {
+  const getFileIcon = (fileWithProgress: FileWithProgress) => {
+    const file = fileWithProgress.file;
     if (!file.name) return '📁';
     const extension = file.name.split('.').pop()?.toLowerCase();
     switch (extension) {
@@ -224,32 +226,32 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {uploadedFiles.map((file, index) => (
-                <div key={`${file.name || 'file'}-${index}`} className="flex items-center space-x-4 p-4 border border-slate-200 rounded-lg">
+              {uploadedFiles.map((fileWithProgress, index) => (
+                <div key={`${fileWithProgress.file.name || 'file'}-${index}`} className="flex items-center space-x-4 p-4 border border-slate-200 rounded-lg">
                   <div className="text-2xl">
-                    {getFileIcon(file)}
+                    {getFileIcon(fileWithProgress)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-slate-900 truncate">
-                        {file.name || 'Unknown file'}
+                        {fileWithProgress.file.name || 'Unknown file'}
                       </p>
                       <div className="flex items-center space-x-2">
                         <Badge 
                           variant={
-                            file.status === 'completed' ? 'default' :
-                            file.status === 'error' ? 'destructive' : 'secondary'
+                            fileWithProgress.status === 'completed' ? 'default' :
+                            fileWithProgress.status === 'error' ? 'destructive' : 'secondary'
                           }
                           className="text-xs"
                         >
-                          {file.status === 'completed' ? 'Completed' :
-                           file.status === 'error' ? 'Error' : 'Uploading'}
+                          {fileWithProgress.status === 'completed' ? 'Completed' :
+                           fileWithProgress.status === 'error' ? 'Error' : 'Uploading'}
                         </Badge>
-                        {file.status === 'completed' && (
+                        {fileWithProgress.status === 'completed' && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeFile(file)}
+                            onClick={() => removeFile(fileWithProgress)}
                             className="h-6 w-6 p-0 text-slate-400 hover:text-red-600"
                           >
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,22 +263,22 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <p className="text-xs text-slate-500">
-                        {formatFileSize(file.size)}
+                        {formatFileSize(fileWithProgress.file.size)}
                       </p>
-                      {file.status === 'uploading' && (
+                      {fileWithProgress.status === 'uploading' && (
                         <p className="text-xs text-slate-500">
-                          {Math.round(file.progress || 0)}%
+                          {Math.round(fileWithProgress.progress || 0)}%
                         </p>
                       )}
                     </div>
-                    {file.status === 'uploading' && (
+                    {fileWithProgress.status === 'uploading' && (
                       <div className="mt-2">
-                        <Progress value={file.progress || 0} className="h-2" />
+                        <Progress value={fileWithProgress.progress || 0} className="h-2" />
                       </div>
                     )}
-                    {file.status === 'error' && file.error && (
+                    {fileWithProgress.status === 'error' && fileWithProgress.error && (
                       <p className="text-xs text-red-600 mt-1">
-                        {file.error}
+                        {fileWithProgress.error}
                       </p>
                     )}
                   </div>
