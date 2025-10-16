@@ -225,8 +225,8 @@ class ArchitectureWorkflow:
                 "retry_count": 0  # Reset retry count on success
             }
             
-            # Save state to database - temporarily disabled due to serialization issues
-            # await self._save_state_to_database(updated_state)
+            # Save state to database
+            await self._save_state_to_database(updated_state)
             
             return updated_state
             
@@ -308,8 +308,8 @@ class ArchitectureWorkflow:
                 "retry_count": 0  # Reset retry count on success
             }
             
-            # Save state to database - temporarily disabled due to serialization issues
-            # await self._save_state_to_database(updated_state)
+            # Save state to database
+            await self._save_state_to_database(updated_state)
             
             return updated_state
             
@@ -432,8 +432,8 @@ class ArchitectureWorkflow:
             "last_updated": datetime.utcnow()
         }
         
-        # Save final state to database - temporarily disabled due to serialization issues
-        # await self._save_state_to_database(updated_state)
+        # Save final state to database
+        await self._save_state_to_database(updated_state)
         
         return updated_state
 
@@ -463,9 +463,101 @@ class ArchitectureWorkflow:
             "last_updated": datetime.utcnow()
         }
 
+    def _serialize_state_data(self, state: ArchitectureWorkflowState) -> dict:
+        """
+        Serialize workflow state data for database storage.
+        
+        Args:
+            state: Current workflow state to serialize
+            
+        Returns:
+            Serialized state data safe for JSON storage
+        """
+        def serialize_value(value):
+            """Recursively serialize values for JSON storage."""
+            if value is None:
+                return None
+            elif isinstance(value, (str, int, float, bool)):
+                return value
+            elif isinstance(value, datetime):
+                return value.isoformat()
+            elif isinstance(value, (list, tuple)):
+                return [serialize_value(item) for item in value]
+            elif isinstance(value, dict):
+                return {k: serialize_value(v) for k, v in value.items()}
+            else:
+                # Convert any other type to string
+                return str(value)
+        
+        # Create serialized state data
+        serialized_data = {
+            "current_stage": state.get("current_stage", "starting"),
+            "stage_progress": state.get("stage_progress", 0.0),
+            "completed_stages": state.get("completed_stages", []),
+            # Store full requirements and architecture data for API access
+            "requirements": state.get("requirements"),
+            "architecture": state.get("architecture"),
+            "stage_results": {
+                "requirements_completed": state.get("requirements") is not None,
+                "architecture_completed": state.get("architecture") is not None,
+                "requirements_completed_at": state.get("requirements_completed_at"),
+                "architecture_completed_at": state.get("architecture_completed_at"),
+                "requirements_summary": self._summarize_requirements(state.get("requirements")) if state.get("requirements") else None,
+                "architecture_summary": self._summarize_architecture(state.get("architecture")) if state.get("architecture") else None
+            },
+            "pending_tasks": state.get("pending_tasks", []),
+            "errors": state.get("errors", []),
+            "metadata": {
+                "document_path": state.get("document_path"),
+                "domain": state.get("domain"),
+                "project_context": state.get("project_context"),
+                "max_retries": state.get("max_retries", 3),
+                "last_updated": state.get("last_updated")
+            }
+        }
+        
+        # Recursively serialize all values
+        return serialize_value(serialized_data)
+
+    def _summarize_requirements(self, requirements: dict) -> dict:
+        """Create a summary of requirements for database storage."""
+        if not requirements:
+            return None
+        
+        try:
+            structured_req = requirements.get("structured_requirements", {})
+            return {
+                "business_goals_count": len(structured_req.get("business_goals", [])),
+                "functional_requirements_count": len(structured_req.get("functional_requirements", [])),
+                "non_functional_requirements_count": sum(len(v) for v in structured_req.get("non_functional_requirements", {}).values()),
+                "constraints_count": len(structured_req.get("constraints", [])),
+                "stakeholders_count": len(structured_req.get("stakeholders", [])),
+                "confidence_score": requirements.get("confidence_score", 0.0),
+                "clarification_questions_count": len(requirements.get("clarification_questions", [])),
+                "identified_gaps_count": len(requirements.get("identified_gaps", []))
+            }
+        except Exception:
+            return {"error": "Failed to summarize requirements"}
+
+    def _summarize_architecture(self, architecture: dict) -> dict:
+        """Create a summary of architecture for database storage."""
+        if not architecture:
+            return None
+        
+        try:
+            return {
+                "architecture_style": architecture.get("architecture_overview", {}).get("style", "unknown"),
+                "components_count": len(architecture.get("components", [])),
+                "quality_score": architecture.get("quality_score", 0.0),
+                "alternatives_count": len(architecture.get("alternatives", [])),
+                "has_c4_diagram": bool(architecture.get("c4_diagram", {}).get("context"))
+            }
+        except Exception:
+            return {"error": "Failed to summarize architecture"}
+
     async def _save_state_to_database(self, state: ArchitectureWorkflowState) -> None:
         """
-        Save workflow state to database.
+        Save workflow state to database with proper serialization.
         
         Args:
             state: Current workflow state to save
@@ -477,35 +569,14 @@ class ArchitectureWorkflow:
             logger.info(f"Starting database save for session {str(state['session_id'])}")
             
             async with AsyncSessionLocal() as db:
-                # Convert state to database format - simplified to avoid serialization issues
-                state_data = {
-                    "current_stage": state.get("current_stage", "starting"),
-                    "stage_progress": state.get("stage_progress", 0.0),
-                    "completed_stages": state.get("completed_stages", []),
-                    "stage_results": {
-                        "requirements_completed": state.get("requirements") is not None,
-                        "architecture_completed": state.get("architecture") is not None,
-                        "requirements_completed_at": state.get("requirements_completed_at"),
-                        "architecture_completed_at": state.get("architecture_completed_at")
-                    },
-                    "pending_tasks": state.get("pending_tasks", []),
-                    "errors": state.get("errors", []),
-                    "metadata": {
-                        "document_path": state.get("document_path"),
-                        "domain": state.get("domain"),
-                        "project_context": state.get("project_context"),
-                        "max_retries": state.get("max_retries", 3),
-                        "last_updated": state.get("last_updated")
-                    }
-                }
+                # Serialize state data for JSON storage
+                state_data = self._serialize_state_data(state)
                 
-                logger.info(f"State data prepared: {str(state_data)[:200]}...")
+                logger.info(f"State data serialized: {str(state_data)[:200]}...")
                 
                 # Update the workflow session in database
                 current_stage_enum = safe_enum_convert(state.get("current_stage", "starting"))
                 logger.info(f"Converting stage '{state.get('current_stage', 'starting')}' to enum: {current_stage_enum}")
-                
-                logger.info(f"Creating update statement for session {str(state['session_id'])}")
                 
                 stmt = (
                     update(WorkflowSession)
@@ -518,10 +589,8 @@ class ArchitectureWorkflow:
                     )
                 )
                 
-                logger.info(f"Executing database update for session {str(state['session_id'])}")
                 await db.execute(stmt)
                 await db.commit()
-                logger.info(f"Database update completed for session {str(state['session_id'])}")
                 
                 logger.info(
                     f"Saved workflow state to database for session {str(state['session_id'])}",
@@ -536,7 +605,7 @@ class ArchitectureWorkflow:
             logger.error(
                 f"Failed to save workflow state to database: {str(e)}",
                 extra={
-                    "session_id": state.get("session_id"),
+                    "session_id": str(state.get("session_id")),
                     "error": str(e)
                 }
             )

@@ -953,7 +953,7 @@ async def get_workflow_requirements(
         return {
             "session_id": session_id,
             "requirements": requirements,
-            "parsed_at": workflow_status.get("requirements_completed_at"),
+            "parsed_at": state_data.get("stage_results", {}).get("requirements_completed_at"),
             "confidence_score": requirements.get("confidence_score", 0.0),
             "summary": {
                 "business_goals_count": len(requirements.get("structured_requirements", {}).get("business_goals", [])),
@@ -1016,7 +1016,7 @@ async def get_workflow_architecture(
         return {
             "session_id": session_id,
             "architecture": architecture,
-            "generated_at": state_data.get("architecture_completed_at"),
+            "generated_at": state_data.get("stage_results", {}).get("architecture_completed_at"),
             "quality_score": architecture.get("quality_score", 0.0),
             "summary": {
                 "architecture_style": architecture.get("architecture_overview", {}).get("style", "unknown"),
