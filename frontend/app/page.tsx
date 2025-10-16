@@ -33,10 +33,11 @@ export default function HomePage() {
   const loadProjects = async () => {
     try {
       const response = await apiClient.listProjects(0, 6); // Get first 6 projects
-      setProjects(response.items);
+      setProjects(response.items || []);
     } catch (error) {
       console.error('Failed to load projects:', error);
       toast.error('Failed to load projects');
+      setProjects([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -135,7 +136,7 @@ export default function HomePage() {
                 </Card>
               ))}
             </div>
-          ) : projects.length > 0 ? (
+          ) : projects && projects.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {projects.map((project) => (
                 <Link key={project.id} href={`/projects/${project.id}`}>

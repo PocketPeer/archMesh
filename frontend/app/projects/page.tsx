@@ -56,6 +56,7 @@ export default function ProjectsPage() {
     } catch (error) {
       console.error('Failed to load projects:', error);
       toast.error('Failed to load projects');
+      setProjects([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
