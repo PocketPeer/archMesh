@@ -13,9 +13,12 @@ from typing import Any, Dict, List, Optional, TypedDict
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.agents.architecture_agent import ArchitectureAgent
 from app.agents.requirements_agent import RequirementsAgent
+from app.models import WorkflowSession, WorkflowStageEnum
 
 
 class ArchitectureWorkflowState(TypedDict):
@@ -571,7 +574,8 @@ class ArchitectureWorkflow:
         document_path: str,
         domain: str,
         project_context: Optional[str] = None,
-        max_retries: int = 3
+        max_retries: int = 3,
+        db: Optional[AsyncSession] = None
     ) -> tuple[str, Dict[str, Any]]:
         """
         Start a new architecture workflow.
@@ -587,6 +591,38 @@ class ArchitectureWorkflow:
             Tuple of (session_id, initial_result)
         """
         session_id = str(uuid.uuid4())
+        
+        # Create database session record if db is provided
+        if db:
+            try:
+                db_workflow = WorkflowSession(
+                    id=session_id,
+                    project_id=project_id,
+                    current_stage=WorkflowStageEnum.STARTING,
+                    state_data={
+                        "current_stage": "starting",
+                        "stage_progress": 0.0,
+                        "completed_stages": [],
+                        "stage_results": {},
+                        "pending_tasks": ["parse_requirements"],
+                        "errors": [],
+                        "metadata": {
+                            "document_path": document_path,
+                            "domain": domain,
+                            "project_context": project_context,
+                            "max_retries": max_retries
+                        }
+                    },
+                    is_active=True,
+                    started_at=datetime.utcnow(),
+                    last_activity=datetime.utcnow()
+                )
+                db.add(db_workflow)
+                await db.commit()
+                logger.info(f"Created database session record for {session_id}")
+            except Exception as e:
+                logger.error(f"Failed to create database session record: {str(e)}")
+                # Continue without database record
         
         logger.info(
             f"Starting architecture workflow",

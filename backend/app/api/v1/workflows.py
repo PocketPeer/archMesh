@@ -701,7 +701,8 @@ async def start_architecture_workflow(
             project_id=project_id,
             document_path=file_info["file_path"],
             domain=domain,
-            project_context=project_context
+            project_context=project_context,
+            db=db
         )
         
         # Move file to processed directory
