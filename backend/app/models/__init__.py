@@ -9,7 +9,7 @@ Models are imported here to ensure they are registered with the metadata.
 from .project import Project, ProjectDomain, ProjectStatus
 from .requirement import Requirement, RequirementStatus
 from .architecture import Architecture, ArchitectureStatus
-from .workflow_session import WorkflowSession
+from .workflow_session import WorkflowSession, WorkflowStageEnum
 from .agent_execution import AgentExecution, AgentExecutionStatus
 
 __all__ = [
@@ -28,6 +28,7 @@ __all__ = [
     
     # Workflow models
     "WorkflowSession",
+    "WorkflowStageEnum",
     
     # Agent execution models
     "AgentExecution",

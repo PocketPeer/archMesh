@@ -8,6 +8,7 @@ sessions with state management and execution tracking.
 import uuid
 from datetime import datetime
 from typing import Any, Dict, Optional
+from enum import Enum
 
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
@@ -15,6 +16,18 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+
+
+class WorkflowStageEnum(str, Enum):
+    """Enumeration of workflow stages."""
+    
+    STARTING = "starting"
+    DOCUMENT_ANALYSIS = "document_analysis"
+    REQUIREMENTS_REVIEW = "requirements_review"
+    ARCHITECTURE_DESIGN = "architecture_design"
+    ARCHITECTURE_REVIEW = "architecture_review"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 
 class WorkflowSession(Base):
