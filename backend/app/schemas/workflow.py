@@ -15,6 +15,7 @@ from enum import Enum
 class WorkflowStageEnum(str, Enum):
     """Workflow stage enumeration."""
     
+    STARTING = "starting"
     DOCUMENT_ANALYSIS = "document_analysis"
     REQUIREMENT_EXTRACTION = "requirement_extraction"
     REQUIREMENT_REVIEW = "requirement_review"

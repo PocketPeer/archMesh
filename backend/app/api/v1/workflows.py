@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
 import json
+from loguru import logger
 
 from app.core.database import get_db
 from app.core.file_storage import file_storage
@@ -180,6 +181,7 @@ async def get_workflow_status(
                 detail=f"Workflow session with ID {session_id} not found"
             )
         
+        
         # Get agent executions
         agent_executions = []
         for execution in db_workflow.agent_executions:
@@ -200,16 +202,43 @@ async def get_workflow_status(
                 "completed_at": execution.completed_at
             })
         
-        # Convert to response schema
+        # Convert to response schema with safe enum conversion
+        def safe_enum_convert(value):
+            """Safely convert string or enum to WorkflowStageEnum, with fallback."""
+            # If it's already a WorkflowStageEnum, return it
+            if isinstance(value, WorkflowStageEnum):
+                return value
+            
+            # If it's a string, try to convert it
+            if isinstance(value, str):
+                try:
+                    return WorkflowStageEnum(value)
+                except ValueError:
+                    # Map common variations to valid enum values
+                    mapping = {
+                        "starting": WorkflowStageEnum.STARTING,
+                        "document_analysis": WorkflowStageEnum.DOCUMENT_ANALYSIS,
+                        "requirements_review": WorkflowStageEnum.REQUIREMENTS_REVIEW,
+                        "architecture_design": WorkflowStageEnum.ARCHITECTURE_DESIGN,
+                        "architecture_review": WorkflowStageEnum.ARCHITECTURE_REVIEW,
+                        "completed": WorkflowStageEnum.COMPLETED,
+                        "failed": WorkflowStageEnum.FAILED,
+                    }
+                    return mapping.get(value, WorkflowStageEnum.STARTING)
+            
+            # Fallback
+            return WorkflowStageEnum.STARTING
+        
+        current_stage = safe_enum_convert(db_workflow.current_stage)
         return WorkflowStatusResponse(
             session_id=db_workflow.id,
             project_id=db_workflow.project_id,
-            current_stage=WorkflowStageEnum(db_workflow.current_stage),
+            current_stage=current_stage,
             state_data={
-                "current_stage": WorkflowStageEnum(db_workflow.current_stage),
+                "current_stage": current_stage,
                 "stage_progress": db_workflow.state_data.get("stage_progress", 0.0),
                 "completed_stages": [
-                    WorkflowStageEnum(stage) for stage in db_workflow.state_data.get("completed_stages", [])
+                    safe_enum_convert(stage) for stage in db_workflow.state_data.get("completed_stages", [])
                 ],
                 "stage_results": db_workflow.state_data.get("stage_results", {}),
                 "pending_tasks": db_workflow.state_data.get("pending_tasks", []),
