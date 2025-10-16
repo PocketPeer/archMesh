@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(true);
 
   // Load project details
-  useState(() => {
+  useEffect(() => {
     const loadProject = async () => {
       try {
         const projectData = await apiClient.getProject(projectId);
@@ -44,7 +44,7 @@ export default function UploadPage() {
     if (projectId) {
       loadProject();
     }
-  });
+  }, [projectId, router]);
 
   const handleFileUpload = (file: File) => {
     setUploadedFile(file);

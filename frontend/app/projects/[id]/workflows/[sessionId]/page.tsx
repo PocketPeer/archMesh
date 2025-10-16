@@ -8,191 +8,531 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { RequirementsViewer } from '@/components/RequirementsViewer';
 import { ArchitectureViewer } from '@/components/ArchitectureViewer';
-import { Project, WorkflowSession, Requirements, Architecture, HumanFeedback } from '@/types';
+import { Project, WorkflowStatus, Requirements, Architecture, HumanFeedback } from '@/types';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { 
+  ArrowLeftIcon, 
+  ClockIcon, 
+  CheckCircleIcon, 
+  AlertCircleIcon,
+  BuildingIcon,
+  FileTextIcon,
+  RefreshCwIcon,
+  PlayIcon,
+  PauseIcon,
+  EyeIcon,
+  EditIcon,
+  MessageSquareIcon,
+  ThumbsUpIcon,
+  ThumbsDownIcon,
+  InfoIcon,
+  ActivityIcon,
+  CalendarIcon,
+  UserIcon
+} from 'lucide-react';
 
-export default function WorkflowDetailPage() {
+export default function WorkflowStatusPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
   const sessionId = params.sessionId as string;
   
   const [project, setProject] = useState<Project | null>(null);
-  const [workflow, setWorkflow] = useState<WorkflowSession | null>(null);
+  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null);
   const [requirements, setRequirements] = useState<Requirements | null>(null);
   const [architecture, setArchitecture] = useState<Architecture | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  
+  // Human feedback state
   const [feedback, setFeedback] = useState<HumanFeedback>({
     decision: 'approved',
     comments: '',
     constraints: [],
     preferences: []
   });
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [newConstraint, setNewConstraint] = useState('');
+  const [newPreference, setNewPreference] = useState('');
 
   useEffect(() => {
     if (projectId && sessionId) {
       loadData();
+      // Set up polling for active workflows
+      const interval = setInterval(() => {
+        if (workflowStatus?.current_stage !== 'completed' && workflowStatus?.current_stage !== 'failed') {
+          refreshWorkflowStatus();
+        }
+      }, 5000); // Poll every 5 seconds
+
+      return () => clearInterval(interval);
     }
   }, [projectId, sessionId]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      
-      // Load project and workflow in parallel
-      const [projectData, workflowData] = await Promise.all([
-        apiClient.getProject(projectId),
-        apiClient.getWorkflowStatus(sessionId)
+      await Promise.all([
+        loadProject(),
+        loadWorkflowStatus(),
+        loadRequirements(),
+        loadArchitecture()
       ]);
-      
-      setProject(projectData);
-      setWorkflow(workflowData);
-
-      // Try to load requirements and architecture if available
-      try {
-        const requirementsData = await apiClient.getWorkflowRequirements(sessionId);
-        setRequirements(requirementsData);
-      } catch (error) {
-        // Requirements not available yet
-      }
-
-      try {
-        const architectureData = await apiClient.getWorkflowArchitecture(sessionId);
-        setArchitecture(architectureData);
-      } catch (error) {
-        // Architecture not available yet
-      }
     } catch (error) {
-      console.error('Failed to load workflow data:', error);
+      console.error('Failed to load data:', error);
       toast.error('Failed to load workflow data');
-      router.push(`/projects/${projectId}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const loadProject = async () => {
+    try {
+      const projectData = await apiClient.getProject(projectId);
+      setProject(projectData);
+    } catch (error) {
+      console.error('Failed to load project:', error);
+    }
+  };
+
+  const loadWorkflowStatus = async () => {
+    try {
+      const status = await apiClient.getWorkflowStatus(sessionId);
+      setWorkflowStatus(status);
+    } catch (error) {
+      console.error('Failed to load workflow status:', error);
+    }
+  };
+
+  const loadRequirements = async () => {
+    try {
+      const req = await apiClient.getRequirements(sessionId);
+      setRequirements(req);
+    } catch (error) {
+      // Requirements might not be available yet
+      console.log('Requirements not available yet');
+    }
+  };
+
+  const loadArchitecture = async () => {
+    try {
+      const arch = await apiClient.getArchitecture(sessionId);
+      setArchitecture(arch);
+    } catch (error) {
+      // Architecture might not be available yet
+      console.log('Architecture not available yet');
+    }
+  };
+
+  const refreshWorkflowStatus = async () => {
+    try {
+      setRefreshing(true);
+      await loadWorkflowStatus();
+      
+      // Reload requirements and architecture if they're now available
+      if (workflowStatus?.current_stage === 'requirements_review' && !requirements) {
+        await loadRequirements();
+      }
+      if (workflowStatus?.current_stage === 'architecture_review' && !architecture) {
+        await loadArchitecture();
+      }
+    } catch (error) {
+      console.error('Failed to refresh workflow status:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleSubmitFeedback = async () => {
+    if (!feedback.decision) {
+      toast.error('Please select a decision');
+      return;
+    }
+
     try {
       setSubmittingFeedback(true);
-      const updatedWorkflow = await apiClient.submitWorkflowReview(sessionId, feedback);
-      setWorkflow(updatedWorkflow);
-      toast.success('Feedback submitted successfully');
+      const updatedStatus = await apiClient.submitReview(sessionId, feedback);
+      setWorkflowStatus(updatedStatus);
       
-      // Reload data to get updated status
-      await loadData();
+      toast.success('Feedback submitted successfully!');
+      
+      // Clear feedback form
+      setFeedback({
+        decision: 'approved',
+        comments: '',
+        constraints: [],
+        preferences: []
+      });
+      setNewConstraint('');
+      setNewPreference('');
+      
+      // Refresh data
+      await refreshWorkflowStatus();
     } catch (error) {
       console.error('Failed to submit feedback:', error);
-      toast.error('Failed to submit feedback');
+      toast.error('Failed to submit feedback. Please try again.');
     } finally {
       setSubmittingFeedback(false);
     }
   };
 
-  const getStatusBadge = (stage: string) => {
-    const colors = {
-      'starting': 'bg-gray-100 text-gray-800',
-      'document_analysis': 'bg-blue-100 text-blue-800',
-      'requirements_review': 'bg-yellow-100 text-yellow-800',
-      'architecture_design': 'bg-purple-100 text-purple-800',
-      'architecture_review': 'bg-orange-100 text-orange-800',
-      'completed': 'bg-green-100 text-green-800',
-      'failed': 'bg-red-100 text-red-800'
-    };
-
-    return (
-      <Badge className={colors[stage as keyof typeof colors] || 'bg-gray-100 text-gray-800'}>
-        {stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-      </Badge>
-    );
+  const addConstraint = () => {
+    if (newConstraint.trim()) {
+      setFeedback(prev => ({
+        ...prev,
+        constraints: [...prev.constraints, newConstraint.trim()]
+      }));
+      setNewConstraint('');
+    }
   };
 
-  const getProgressPercentage = () => {
-    if (!workflow) return 0;
-    return Math.round(workflow.state_data.stage_progress * 100);
+  const removeConstraint = (index: number) => {
+    setFeedback(prev => ({
+      ...prev,
+      constraints: prev.constraints.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addPreference = () => {
+    if (newPreference.trim()) {
+      setFeedback(prev => ({
+        ...prev,
+        preferences: [...prev.preferences, newPreference.trim()]
+      }));
+      setNewPreference('');
+    }
+  };
+
+  const removePreference = (index: number) => {
+    setFeedback(prev => ({
+      ...prev,
+      preferences: prev.preferences.filter((_, i) => i !== index)
+    }));
+  };
+
+  const getStageProgress = () => {
+    if (!workflowStatus) return 0;
+    
+    const stages = ['starting', 'document_analysis', 'requirements_review', 'architecture_design', 'architecture_review', 'completed'];
+    const currentIndex = stages.indexOf(workflowStatus.current_stage);
+    return ((currentIndex + 1) / stages.length) * 100;
+  };
+
+  const getStageIcon = (stage: string) => {
+    switch (stage) {
+      case 'starting': return <PlayIcon className="h-4 w-4" />;
+      case 'document_analysis': return <FileTextIcon className="h-4 w-4" />;
+      case 'requirements_review': return <MessageSquareIcon className="h-4 w-4" />;
+      case 'architecture_design': return <BuildingIcon className="h-4 w-4" />;
+      case 'architecture_review': return <EyeIcon className="h-4 w-4" />;
+      case 'completed': return <CheckCircleIcon className="h-4 w-4" />;
+      case 'failed': return <AlertCircleIcon className="h-4 w-4" />;
+      default: return <ActivityIcon className="h-4 w-4" />;
+    }
+  };
+
+  const getStageColor = (stage: string) => {
+    switch (stage) {
+      case 'starting': return 'text-blue-600';
+      case 'document_analysis': return 'text-blue-600';
+      case 'requirements_review': return 'text-yellow-600';
+      case 'architecture_design': return 'text-purple-600';
+      case 'architecture_review': return 'text-orange-600';
+      case 'completed': return 'text-green-600';
+      case 'failed': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
   };
 
   const isWaitingForReview = () => {
-    if (!workflow) return false;
-    return workflow.current_stage.includes('review') && workflow.is_active;
+    return workflowStatus?.current_stage === 'requirements_review' || 
+           workflowStatus?.current_stage === 'architecture_review';
   };
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-slate-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-6">
+            <div className="animate-pulse">
+              <div className="h-8 bg-slate-200 rounded w-1/3 mb-4"></div>
+              <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!project || !workflow) {
+  if (!project || !workflowStatus) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">Workflow Not Found</h1>
-        <p className="text-slate-600 mb-6">The workflow you're looking for doesn't exist.</p>
-        <Link href={`/projects/${projectId}`}>
-          <Button>Back to Project</Button>
-        </Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircleIcon className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Workflow Not Found</h1>
+          <p className="text-slate-600 mb-6">The workflow session you're looking for doesn't exist.</p>
+          <Link href={`/projects/${projectId}`}>
+            <Button>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Back to Project
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center space-x-4 mb-2">
-            <h1 className="text-3xl font-bold text-slate-900">Workflow Session</h1>
-            {getStatusBadge(workflow.current_stage)}
-            <Badge variant={workflow.is_active ? "default" : "secondary"}>
-              {workflow.is_active ? "Active" : "Inactive"}
-            </Badge>
-          </div>
-          <p className="text-slate-600">
-            Session ID: <span className="font-mono text-sm">{sessionId}</span>
-          </p>
-        </div>
-        <div className="flex space-x-2">
-          <Link href={`/projects/${projectId}`}>
-            <Button variant="outline">Back to Project</Button>
-          </Link>
-          {isWaitingForReview() && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  Submit Review
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex items-center space-x-4">
+              <Link href={`/projects/${projectId}`}>
+                <Button variant="outline" size="sm">
+                  <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                  Back to Project
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Submit Review</DialogTitle>
-                  <DialogDescription>
-                    Provide your feedback for the {workflow.current_stage.replace('_', ' ')} stage.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
+              </Link>
+              <div>
+                <h1 className="text-4xl font-bold text-slate-900">Workflow Status</h1>
+                <p className="text-lg text-slate-600">
+                  {project.name} • Session {sessionId.slice(0, 8)}...
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={refreshWorkflowStatus}
+                disabled={refreshing}
+              >
+                <RefreshCwIcon className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          {/* Progress Overview */}
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <ActivityIcon className="mr-2 h-5 w-5" />
+                Workflow Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Progress Bar */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-700">Overall Progress</span>
+                    <span className="text-sm text-slate-600">{Math.round(getStageProgress())}%</span>
+                  </div>
+                  <Progress value={getStageProgress()} className="h-3" />
+                </div>
+
+                {/* Current Stage */}
+                <div className="flex items-center space-x-4">
+                  <div className={`flex items-center space-x-2 ${getStageColor(workflowStatus.current_stage)}`}>
+                    {getStageIcon(workflowStatus.current_stage)}
+                    <span className="font-medium">
+                      {workflowStatus.current_stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  </div>
+                  {isWaitingForReview() && (
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                      <MessageSquareIcon className="mr-1 h-3 w-3" />
+                      Awaiting Review
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Errors */}
+                {workflowStatus.errors && workflowStatus.errors.length > 0 && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center mb-2">
+                      <AlertCircleIcon className="h-4 w-4 text-red-600 mr-2" />
+                      <h4 className="text-sm font-medium text-red-800">Errors</h4>
+                    </div>
+                    <ul className="text-sm text-red-700 space-y-1">
+                      {workflowStatus.errors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Main Content */}
+          <Tabs defaultValue="status" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="status" className="flex items-center">
+                <ActivityIcon className="mr-2 h-4 w-4" />
+                Status
+              </TabsTrigger>
+              <TabsTrigger value="requirements" className="flex items-center" disabled={!requirements}>
+                <FileTextIcon className="mr-2 h-4 w-4" />
+                Requirements
+              </TabsTrigger>
+              <TabsTrigger value="architecture" className="flex items-center" disabled={!architecture}>
+                <BuildingIcon className="mr-2 h-4 w-4" />
+                Architecture
+              </TabsTrigger>
+              <TabsTrigger value="feedback" className="flex items-center" disabled={!isWaitingForReview()}>
+                <MessageSquareIcon className="mr-2 h-4 w-4" />
+                Review
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="status" className="space-y-6">
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle>Workflow Details</CardTitle>
+                  <CardDescription>
+                    Current status and progress of the architecture generation workflow
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Session ID</span>
+                      <p className="text-slate-900 font-mono text-sm bg-slate-100 px-2 py-1 rounded">
+                        {sessionId}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-slate-600">Current Stage</span>
+                      <div className="flex items-center space-x-2 mt-1">
+                        {getStageIcon(workflowStatus.current_stage)}
+                        <span className="text-slate-900">
+                          {workflowStatus.current_stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {isWaitingForReview() && (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center mb-2">
+                        <MessageSquareIcon className="h-4 w-4 text-yellow-600 mr-2" />
+                        <h4 className="text-sm font-medium text-yellow-800">Human Review Required</h4>
+                      </div>
+                      <p className="text-sm text-yellow-700">
+                        The workflow is waiting for your review and feedback. Please go to the Review tab to provide your input.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="requirements" className="space-y-6">
+              {requirements ? (
+                <RequirementsViewer
+                  requirements={requirements}
+                  onApprove={() => {
+                    setFeedback(prev => ({ ...prev, decision: 'approved' }));
+                    handleSubmitFeedback();
+                  }}
+                  onReject={() => {
+                    setFeedback(prev => ({ ...prev, decision: 'rejected' }));
+                    handleSubmitFeedback();
+                  }}
+                />
+              ) : (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="text-center py-16">
+                    <FileTextIcon className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">Requirements Not Available</h3>
+                    <p className="text-slate-600">
+                      Requirements will be available once the document analysis is complete.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="architecture" className="space-y-6">
+              {architecture ? (
+                <ArchitectureViewer
+                  architecture={architecture}
+                  onApprove={() => {
+                    setFeedback(prev => ({ ...prev, decision: 'approved' }));
+                    handleSubmitFeedback();
+                  }}
+                  onReject={() => {
+                    setFeedback(prev => ({ ...prev, decision: 'rejected' }));
+                    handleSubmitFeedback();
+                  }}
+                />
+              ) : (
+                <Card className="border-0 shadow-md">
+                  <CardContent className="text-center py-16">
+                    <BuildingIcon className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">Architecture Not Available</h3>
+                    <p className="text-slate-600">
+                      Architecture will be available once the design phase is complete.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="feedback" className="space-y-6">
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <MessageSquareIcon className="mr-2 h-5 w-5" />
+                    Human Review & Feedback
+                  </CardTitle>
+                  <CardDescription>
+                    Provide your feedback to continue the workflow
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Decision */}
                   <div>
-                    <label className="text-sm font-medium text-slate-700 mb-2 block">
+                    <label className="text-sm font-medium text-slate-700 mb-3 block">
                       Decision
                     </label>
-                    <select
-                      value={feedback.decision}
-                      onChange={(e) => setFeedback(prev => ({ ...prev, decision: e.target.value as HumanFeedback['decision'] }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="approved">Approve</option>
-                      <option value="rejected">Reject</option>
-                      <option value="needs_info">Needs More Information</option>
-                    </select>
+                    <div className="flex space-x-4">
+                      <Button
+                        variant={feedback.decision === 'approved' ? 'default' : 'outline'}
+                        onClick={() => setFeedback(prev => ({ ...prev, decision: 'approved' }))}
+                        className="flex items-center"
+                      >
+                        <ThumbsUpIcon className="mr-2 h-4 w-4" />
+                        Approve
+                      </Button>
+                      <Button
+                        variant={feedback.decision === 'rejected' ? 'destructive' : 'outline'}
+                        onClick={() => setFeedback(prev => ({ ...prev, decision: 'rejected' }))}
+                        className="flex items-center"
+                      >
+                        <ThumbsDownIcon className="mr-2 h-4 w-4" />
+                        Reject
+                      </Button>
+                      <Button
+                        variant={feedback.decision === 'needs_info' ? 'default' : 'outline'}
+                        onClick={() => setFeedback(prev => ({ ...prev, decision: 'needs_info' }))}
+                        className="flex items-center"
+                      >
+                        <InfoIcon className="mr-2 h-4 w-4" />
+                        Needs More Info
+                      </Button>
+                    </div>
                   </div>
+
+                  {/* Comments */}
                   <div>
                     <label className="text-sm font-medium text-slate-700 mb-2 block">
                       Comments
@@ -200,239 +540,101 @@ export default function WorkflowDetailPage() {
                     <Textarea
                       value={feedback.comments}
                       onChange={(e) => setFeedback(prev => ({ ...prev, comments: e.target.value }))}
-                      placeholder="Provide detailed feedback..."
+                      placeholder="Provide detailed feedback about the current stage..."
                       rows={4}
                     />
                   </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setFeedback({ decision: 'approved', comments: '', constraints: [], preferences: [] })}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
+
+                  {/* Constraints */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-2 block">
+                      Additional Constraints
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        <Input
+                          value={newConstraint}
+                          onChange={(e) => setNewConstraint(e.target.value)}
+                          placeholder="Add a constraint..."
+                          onKeyPress={(e) => e.key === 'Enter' && addConstraint()}
+                        />
+                        <Button onClick={addConstraint} size="sm">
+                          Add
+                        </Button>
+                      </div>
+                      {feedback.constraints.length > 0 && (
+                        <div className="space-y-1">
+                          {feedback.constraints.map((constraint, index) => (
+                            <div key={index} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded">
+                              <span className="text-sm">{constraint}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeConstraint(index)}
+                                className="h-6 w-6 p-0 text-slate-400 hover:text-red-600"
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Preferences */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-2 block">
+                      Preferences
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        <Input
+                          value={newPreference}
+                          onChange={(e) => setNewPreference(e.target.value)}
+                          placeholder="Add a preference..."
+                          onKeyPress={(e) => e.key === 'Enter' && addPreference()}
+                        />
+                        <Button onClick={addPreference} size="sm">
+                          Add
+                        </Button>
+                      </div>
+                      {feedback.preferences.length > 0 && (
+                        <div className="space-y-1">
+                          {feedback.preferences.map((preference, index) => (
+                            <div key={index} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded">
+                              <span className="text-sm">{preference}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePreference(index)}
+                                className="h-6 w-6 p-0 text-slate-400 hover:text-red-600"
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="flex justify-end">
+                    <Button
                       onClick={handleSubmitFeedback}
-                      disabled={submittingFeedback}
+                      disabled={submittingFeedback || !feedback.decision}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     >
                       {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
                     </Button>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
-
-      {/* Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Progress</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-700">Overall Progress</span>
-              <span className="text-sm text-slate-600">{getProgressPercentage()}%</span>
-            </div>
-            <div className="w-full bg-slate-200 rounded-full h-2">
-              <div 
-                className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${getProgressPercentage()}%` }}
-              ></div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3 text-sm">
-              <div>
-                <span className="text-slate-600">Started:</span>
-                <p className="text-slate-900">{new Date(workflow.started_at).toLocaleString()}</p>
-              </div>
-              <div>
-                <span className="text-slate-600">Last Activity:</span>
-                <p className="text-slate-900">{new Date(workflow.last_activity_at).toLocaleString()}</p>
-              </div>
-              <div>
-                <span className="text-slate-600">Completed Stages:</span>
-                <p className="text-slate-900">{workflow.state_data.completed_stages.length}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Errors */}
-      {workflow.state_data.errors.length > 0 && (
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="text-red-800">Errors</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {workflow.state_data.errors.map((error, index) => (
-                <div key={index} className="p-3 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-sm text-red-800">{error}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Main Content */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="requirements">Requirements</TabsTrigger>
-          <TabsTrigger value="architecture">Architecture</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Workflow Overview</CardTitle>
-              <CardDescription>
-                Current status and stage information
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <span className="text-sm font-medium text-slate-600">Current Stage:</span>
-                  <p className="text-slate-900">{workflow.current_stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-600">Status:</span>
-                  <p className="text-slate-900">{workflow.is_active ? 'Active' : 'Inactive'}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-600">Completed Stages:</span>
-                  <div className="mt-1">
-                    {workflow.state_data.completed_stages.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {workflow.state_data.completed_stages.map((stage, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {stage.replace('_', ' ')}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-slate-500 text-sm">None yet</span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-600">Pending Tasks:</span>
-                  <div className="mt-1">
-                    {workflow.state_data.pending_tasks.length > 0 ? (
-                      <ul className="text-sm text-slate-600 space-y-1">
-                        {workflow.state_data.pending_tasks.map((task, index) => (
-                          <li key={index}>• {task}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <span className="text-slate-500 text-sm">None</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="requirements" className="space-y-4">
-          {requirements ? (
-            <RequirementsViewer 
-              requirements={requirements}
-              onApprove={async () => {
-                // Handle requirements approval
-                const feedback: HumanFeedback = {
-                  decision: 'approved',
-                  comments: 'Requirements look good, proceeding to architecture design'
-                };
-                await apiClient.submitWorkflowReview(sessionId, feedback);
-                await loadData(); // Reload to get updated status
-              }}
-              onReject={async () => {
-                // Handle requirements rejection
-                const feedback: HumanFeedback = {
-                  decision: 'rejected',
-                  comments: 'Requirements need revision before proceeding'
-                };
-                await apiClient.submitWorkflowReview(sessionId, feedback);
-                await loadData(); // Reload to get updated status
-              }}
-            />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Requirements</CardTitle>
-                <CardDescription>
-                  Extracted and structured requirements from your document
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-slate-600">
-                  {workflow.current_stage === 'requirements_review' ? (
-                    <div>
-                      <p>Requirements are being processed...</p>
-                      <p className="text-sm mt-2">This may take a few minutes.</p>
-                    </div>
-                  ) : (
-                    <p>Requirements will appear here once the document analysis is complete.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="architecture" className="space-y-4">
-          {architecture ? (
-            <ArchitectureViewer 
-              architecture={architecture}
-              onApprove={async () => {
-                // Handle architecture approval
-                const feedback: HumanFeedback = {
-                  decision: 'approved',
-                  comments: 'Architecture design looks good, proceeding to completion'
-                };
-                await apiClient.submitWorkflowReview(sessionId, feedback);
-                await loadData(); // Reload to get updated status
-              }}
-              onReject={async () => {
-                // Handle architecture rejection
-                const feedback: HumanFeedback = {
-                  decision: 'rejected',
-                  comments: 'Architecture needs revision before proceeding'
-                };
-                await apiClient.submitWorkflowReview(sessionId, feedback);
-                await loadData(); // Reload to get updated status
-              }}
-            />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Architecture</CardTitle>
-                <CardDescription>
-                  Generated system architecture and design recommendations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-slate-600">
-                  {workflow.current_stage === 'architecture_design' || workflow.current_stage === 'architecture_review' ? (
-                    <div>
-                      <p>Architecture is being generated...</p>
-                      <p className="text-sm mt-2">This may take a few minutes.</p>
-                    </div>
-                  ) : (
-                    <p>Architecture will appear here once the design phase is complete.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
