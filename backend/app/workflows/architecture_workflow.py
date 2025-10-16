@@ -21,6 +21,29 @@ from app.agents.requirements_agent import RequirementsAgent
 from app.models import WorkflowSession, WorkflowStageEnum
 
 
+def safe_enum_convert(value):
+    """
+    Safely convert a value to WorkflowStageEnum.
+    
+    Args:
+        value: String or enum value to convert
+        
+    Returns:
+        WorkflowStageEnum value
+    """
+    if isinstance(value, WorkflowStageEnum):
+        return value
+    
+    if isinstance(value, str):
+        try:
+            return WorkflowStageEnum(value)
+        except ValueError:
+            # Fallback to STARTING if value is not valid
+            return WorkflowStageEnum.STARTING
+    
+    return WorkflowStageEnum.STARTING
+
+
 class ArchitectureWorkflowState(TypedDict):
     """
     State for the architecture generation workflow.
@@ -167,8 +190,8 @@ class ArchitectureWorkflow:
             logger.info(
                 f"Parsing requirements for session {state['session_id']}",
                 extra={
-                    "session_id": state["session_id"],
-                    "project_id": state["project_id"],
+                    "session_id": str(state["session_id"]),
+                    "project_id": str(state["project_id"]),
                     "document_path": state["document_path"],
                     "domain": state["domain"]
                 }
@@ -179,19 +202,21 @@ class ArchitectureWorkflow:
                 "document_path": state["document_path"],
                 "project_context": state.get("project_context"),
                 "domain": state["domain"],
-                "session_id": state["session_id"]
+                "session_id": str(state["session_id"])
             })
             
             logger.info(
                 f"Requirements parsed successfully for session {state['session_id']}",
                 extra={
-                    "session_id": state["session_id"],
+                    "session_id": str(state["session_id"]),
                     "confidence_score": requirements.get("confidence_score", 0.0),
                     "requirements_count": len(requirements.get("structured_requirements", {}).get("functional_requirements", []))
                 }
             )
             
-            return {
+            # Update state with requirements
+            updated_state = {
+                **state,
                 "requirements": requirements,
                 "current_stage": "requirements_review",
                 "previous_stage": "parse_requirements",
@@ -200,12 +225,17 @@ class ArchitectureWorkflow:
                 "retry_count": 0  # Reset retry count on success
             }
             
+            # Save state to database - temporarily disabled due to serialization issues
+            # await self._save_state_to_database(updated_state)
+            
+            return updated_state
+            
         except Exception as e:
             error_msg = f"Failed to parse requirements: {str(e)}"
             logger.error(
                 error_msg,
                 extra={
-                    "session_id": state["session_id"],
+                    "session_id": str(state["session_id"]),
                     "error": str(e)
                 }
             )
@@ -233,8 +263,8 @@ class ArchitectureWorkflow:
             logger.info(
                 f"Designing architecture for session {state['session_id']}",
                 extra={
-                    "session_id": state["session_id"],
-                    "project_id": state["project_id"],
+                    "session_id": str(state["session_id"]),
+                    "project_id": str(state["project_id"]),
                     "domain": state["domain"]
                 }
             )
@@ -254,20 +284,22 @@ class ArchitectureWorkflow:
                 "constraints": constraints,
                 "preferences": preferences,
                 "domain": state["domain"],
-                "session_id": state["session_id"]
+                "session_id": str(state["session_id"])
             })
             
             logger.info(
                 f"Architecture designed successfully for session {state['session_id']}",
                 extra={
-                    "session_id": state["session_id"],
+                    "session_id": str(state["session_id"]),
                     "architecture_style": architecture.get("architecture_overview", {}).get("style", "unknown"),
                     "components_count": len(architecture.get("components", [])),
                     "quality_score": architecture.get("quality_score", 0.0)
                 }
             )
             
-            return {
+            # Update state with architecture
+            updated_state = {
+                **state,
                 "architecture": architecture,
                 "current_stage": "architecture_review",
                 "previous_stage": "design_architecture",
@@ -276,12 +308,17 @@ class ArchitectureWorkflow:
                 "retry_count": 0  # Reset retry count on success
             }
             
+            # Save state to database - temporarily disabled due to serialization issues
+            # await self._save_state_to_database(updated_state)
+            
+            return updated_state
+            
         except Exception as e:
             error_msg = f"Failed to design architecture: {str(e)}"
             logger.error(
                 error_msg,
                 extra={
-                    "session_id": state["session_id"],
+                    "session_id": str(state["session_id"]),
                     "error": str(e)
                 }
             )
@@ -311,7 +348,7 @@ class ArchitectureWorkflow:
         logger.info(
             f"Waiting for human review of requirements for session {state['session_id']}",
             extra={
-                "session_id": state["session_id"],
+                "session_id": str(state["session_id"]),
                 "current_stage": state["current_stage"]
             }
         )
@@ -348,7 +385,7 @@ class ArchitectureWorkflow:
         logger.info(
             f"Waiting for human review of architecture for session {state['session_id']}",
             extra={
-                "session_id": state["session_id"],
+                "session_id": str(state["session_id"]),
                 "current_stage": state["current_stage"]
             }
         )
@@ -382,16 +419,23 @@ class ArchitectureWorkflow:
         logger.info(
             f"Workflow completed successfully for session {state['session_id']}",
             extra={
-                "session_id": state["session_id"],
+                "session_id": str(state["session_id"]),
                 "project_id": state["project_id"],
                 "total_duration": (datetime.utcnow() - state["started_at"]).total_seconds()
             }
         )
         
-        return {
+        # Update state with completion
+        updated_state = {
+            **state,
             "current_stage": "completed",
             "last_updated": datetime.utcnow()
         }
+        
+        # Save final state to database - temporarily disabled due to serialization issues
+        # await self._save_state_to_database(updated_state)
+        
+        return updated_state
 
     async def _handle_error_node(
         self,
@@ -409,7 +453,7 @@ class ArchitectureWorkflow:
         logger.error(
             f"Workflow error for session {state['session_id']}",
             extra={
-                "session_id": state["session_id"],
+                "session_id": str(state["session_id"]),
                 "errors": state.get("errors", [])
             }
         )
@@ -418,6 +462,85 @@ class ArchitectureWorkflow:
             "current_stage": "failed",
             "last_updated": datetime.utcnow()
         }
+
+    async def _save_state_to_database(self, state: ArchitectureWorkflowState) -> None:
+        """
+        Save workflow state to database.
+        
+        Args:
+            state: Current workflow state to save
+        """
+        try:
+            from app.core.database import AsyncSessionLocal
+            from sqlalchemy import select, update
+            
+            logger.info(f"Starting database save for session {str(state['session_id'])}")
+            
+            async with AsyncSessionLocal() as db:
+                # Convert state to database format - simplified to avoid serialization issues
+                state_data = {
+                    "current_stage": state.get("current_stage", "starting"),
+                    "stage_progress": state.get("stage_progress", 0.0),
+                    "completed_stages": state.get("completed_stages", []),
+                    "stage_results": {
+                        "requirements_completed": state.get("requirements") is not None,
+                        "architecture_completed": state.get("architecture") is not None,
+                        "requirements_completed_at": state.get("requirements_completed_at"),
+                        "architecture_completed_at": state.get("architecture_completed_at")
+                    },
+                    "pending_tasks": state.get("pending_tasks", []),
+                    "errors": state.get("errors", []),
+                    "metadata": {
+                        "document_path": state.get("document_path"),
+                        "domain": state.get("domain"),
+                        "project_context": state.get("project_context"),
+                        "max_retries": state.get("max_retries", 3),
+                        "last_updated": state.get("last_updated")
+                    }
+                }
+                
+                logger.info(f"State data prepared: {str(state_data)[:200]}...")
+                
+                # Update the workflow session in database
+                current_stage_enum = safe_enum_convert(state.get("current_stage", "starting"))
+                logger.info(f"Converting stage '{state.get('current_stage', 'starting')}' to enum: {current_stage_enum}")
+                
+                logger.info(f"Creating update statement for session {str(state['session_id'])}")
+                
+                stmt = (
+                    update(WorkflowSession)
+                    .where(WorkflowSession.id == state["session_id"])
+                    .values(
+                        current_stage=current_stage_enum,
+                        state_data=state_data,
+                        last_activity=datetime.utcnow(),
+                        completed_at=datetime.utcnow() if state.get("current_stage") == "completed" else None
+                    )
+                )
+                
+                logger.info(f"Executing database update for session {str(state['session_id'])}")
+                await db.execute(stmt)
+                await db.commit()
+                logger.info(f"Database update completed for session {str(state['session_id'])}")
+                
+                logger.info(
+                    f"Saved workflow state to database for session {str(state['session_id'])}",
+                    extra={
+                        "session_id": str(state["session_id"]),
+                        "current_stage": str(state.get("current_stage", "unknown")),
+                        "completed_stages": str(state.get("completed_stages", []))
+                    }
+                )
+                
+        except Exception as e:
+            logger.error(
+                f"Failed to save workflow state to database: {str(e)}",
+                extra={
+                    "session_id": state.get("session_id"),
+                    "error": str(e)
+                }
+            )
+            # Don't raise - we don't want to break the workflow if database save fails
 
     def _check_requirements_approval(
         self,
@@ -450,7 +573,7 @@ class ArchitectureWorkflow:
         if retry_count >= max_retries:
             logger.warning(
                 f"Maximum retries exceeded for session {state['session_id']}",
-                extra={"session_id": state["session_id"], "retry_count": retry_count}
+                extra={"session_id": str(state["session_id"]), "retry_count": retry_count}
             )
             return "error"
         
@@ -495,7 +618,7 @@ class ArchitectureWorkflow:
         if retry_count >= max_retries:
             logger.warning(
                 f"Maximum retries exceeded for session {state['session_id']}",
-                extra={"session_id": state["session_id"], "retry_count": retry_count}
+                extra={"session_id": str(state["session_id"]), "retry_count": retry_count}
             )
             return "error"
         
@@ -662,10 +785,10 @@ class ArchitectureWorkflow:
         
         try:
             result = await self.graph.ainvoke(initial_state, config)
-            logger.info(f"Workflow started successfully for session {session_id}")
+            logger.info(f"Workflow started successfully for session {str(session_id)}")
             return session_id, result
         except Exception as e:
-            logger.error(f"Failed to start workflow for session {session_id}: {str(e)}")
+            logger.error(f"Failed to start workflow for session {str(session_id)}: {str(e)}")
             raise
 
     async def continue_workflow(
