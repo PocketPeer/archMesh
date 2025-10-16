@@ -929,19 +929,21 @@ async def get_workflow_requirements(
         HTTPException: 404 if session not found or requirements not available, 500 if retrieval fails
     """
     try:
-        # Initialize workflow
-        workflow = ArchitectureWorkflow()
+        # Get workflow session from database
+        result = await db.execute(
+            select(WorkflowSession).where(WorkflowSession.id == session_id)
+        )
+        db_workflow = result.scalar_one_or_none()
         
-        # Get workflow status
-        workflow_status = await workflow.get_status(session_id)
-        
-        if not workflow_status:
+        if not db_workflow:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Workflow session {session_id} not found"
             )
         
-        requirements = workflow_status.get("requirements")
+        # Get requirements from state data
+        state_data = db_workflow.state_data or {}
+        requirements = state_data.get("requirements")
         if not requirements:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -990,19 +992,21 @@ async def get_workflow_architecture(
         HTTPException: 404 if session not found or architecture not available, 500 if retrieval fails
     """
     try:
-        # Initialize workflow
-        workflow = ArchitectureWorkflow()
+        # Get workflow session from database
+        result = await db.execute(
+            select(WorkflowSession).where(WorkflowSession.id == session_id)
+        )
+        db_workflow = result.scalar_one_or_none()
         
-        # Get workflow status
-        status = await workflow.get_status(session_id)
-        
-        if not status:
+        if not db_workflow:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Workflow session {session_id} not found"
             )
         
-        architecture = status.get("architecture")
+        # Get architecture from state data
+        state_data = db_workflow.state_data or {}
+        architecture = state_data.get("architecture")
         if not architecture:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -1012,7 +1016,7 @@ async def get_workflow_architecture(
         return {
             "session_id": session_id,
             "architecture": architecture,
-            "generated_at": status.get("architecture_completed_at"),
+            "generated_at": state_data.get("architecture_completed_at"),
             "quality_score": architecture.get("quality_score", 0.0),
             "summary": {
                 "architecture_style": architecture.get("architecture_overview", {}).get("style", "unknown"),
