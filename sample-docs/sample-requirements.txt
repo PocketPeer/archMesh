@@ -1,0 +1,47 @@
+# Sample Business Requirements
+# Project: E-Commerce Platform
+
+## Business Goals
+1. Launch an online marketplace for handmade crafts
+2. Support 10,000 concurrent users
+3. Process payments securely
+4. Mobile-first experience
+
+## Functional Requirements
+1. User registration and authentication
+2. Product catalog with search
+3. Shopping cart and checkout
+4. Payment processing (Stripe integration)
+5. Order tracking
+6. Seller dashboard
+7. Admin panel
+
+## Non-Functional Requirements
+
+### Performance
+- Page load time < 2 seconds
+- API response time < 500ms
+- Support 10,000 concurrent users
+
+### Security
+- HTTPS only
+- PCI DSS compliance for payments
+- Data encryption at rest
+- Regular security audits
+
+### Scalability
+- Horizontal scaling capability
+- Auto-scaling based on traffic
+- CDN for static assets
+
+## Constraints
+- Budget: $50,000 for first 6 months
+- Timeline: MVP in 3 months
+- Team: 3 developers
+- Cloud: AWS preferred
+
+## Stakeholders
+1. CEO - Wants fast time to market
+2. CTO - Wants scalable, maintainable architecture
+3. CFO - Budget conscious
+4. Marketing - Needs analytics integration
