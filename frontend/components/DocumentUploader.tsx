@@ -79,8 +79,8 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
         clearInterval(interval);
         
         setUploadedFiles(prev => 
-          prev.map(f => 
-            f === fileWithProgress 
+          prev.map((f, i) => 
+            i === index 
               ? { ...f, progress: 100, status: 'completed' as const }
               : f
           )
@@ -102,8 +102,8 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
         }, 500);
       } else {
         setUploadedFiles(prev => 
-          prev.map(f => 
-            f === fileWithProgress 
+          prev.map((f, i) => 
+            i === index 
               ? { ...f, progress }
               : f
           )
@@ -113,8 +113,8 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
   };
 
   const removeFile = (fileToRemove: FileWithProgress) => {
-    setUploadedFiles(prev => prev.filter(f => f !== fileToRemove));
-    toast.info(`${fileToRemove.name} removed`);
+    setUploadedFiles(prev => prev.filter(f => f.file.name !== fileToRemove.file.name));
+    toast.info(`${fileToRemove.file.name} removed`);
   };
 
   const formatFileSize = (bytes: number): string => {
