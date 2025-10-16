@@ -135,7 +135,8 @@ class APIClient {
     projectId: string, 
     file: File, 
     domain: string = 'cloud-native',
-    projectContext?: string
+    projectContext?: string,
+    llmProvider?: string
   ): Promise<WorkflowStartResponse> {
     const formData = new FormData();
     formData.append('file', file);
@@ -143,6 +144,9 @@ class APIClient {
     formData.append('domain', domain);
     if (projectContext) {
       formData.append('project_context', projectContext);
+    }
+    if (llmProvider) {
+      formData.append('llm_provider', llmProvider);
     }
 
     return this.uploadFile<WorkflowStartResponse>(
@@ -231,9 +235,10 @@ class APIClient {
     file: File,
     projectId: string,
     domain: string = 'cloud-native',
-    projectContext?: string
+    projectContext?: string,
+    llmProvider?: string
   ): Promise<WorkflowStartResponse> {
-    return this.startWorkflow(projectId, file, domain, projectContext);
+    return this.startWorkflow(projectId, file, domain, projectContext, llmProvider);
   }
 
   /**

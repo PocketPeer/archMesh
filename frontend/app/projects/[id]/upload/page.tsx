@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { DocumentUploader } from '@/components/DocumentUploader';
 import { Project, WorkflowStartResponse } from '@/types';
 import { apiClient } from '@/lib/api-client';
@@ -22,6 +24,7 @@ export default function UploadPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [projectContext, setProjectContext] = useState('');
   const [domain, setDomain] = useState<'cloud-native' | 'data-platform' | 'enterprise'>('cloud-native');
+  const [llmProvider, setLlmProvider] = useState<'deepseek' | 'openai' | 'anthropic'>('deepseek');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -65,11 +68,13 @@ export default function UploadPage() {
         uploadedFile,
         projectId,
         domain,
-        projectContext || undefined
+        projectContext || undefined,
+        llmProvider
       );
 
       toast.success('Workflow started successfully!');
-      router.push(`/projects/${projectId}/workflows/${response.session_id}`);
+      // Redirect to project detail page with workflow status
+      router.push(`/projects/${projectId}?workflow=${response.session_id}`);
     } catch (error) {
       console.error('Failed to start workflow:', error);
       toast.error('Failed to start workflow. Please try again.');
@@ -154,6 +159,53 @@ export default function UploadPage() {
                     onUploadComplete={handleFileUpload}
                     projectId={projectId}
                   />
+                </div>
+
+                {/* LLM Provider Selection */}
+                <div>
+                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                    AI Provider
+                  </Label>
+                  <Select value={llmProvider} onValueChange={(value: 'deepseek' | 'openai' | 'anthropic') => setLlmProvider(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="deepseek">
+                        <div className="flex items-center space-x-2">
+                          <span>🤖</span>
+                          <div>
+                            <div className="font-medium">DeepSeek (Local)</div>
+                            <div className="text-xs text-slate-500">Free, private, offline processing</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="openai">
+                        <div className="flex items-center space-x-2">
+                          <span>🧠</span>
+                          <div>
+                            <div className="font-medium">OpenAI GPT-4</div>
+                            <div className="text-xs text-slate-500">Cloud-based, paid service</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="anthropic">
+                        <div className="flex items-center space-x-2">
+                          <span>🔮</span>
+                          <div>
+                            <div className="font-medium">Anthropic Claude</div>
+                            <div className="text-xs text-slate-500">Cloud-based, paid service</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {llmProvider === 'deepseek' 
+                      ? 'Recommended for development and sensitive data. No API costs.'
+                      : 'Cloud-based AI with API costs. Use for production or when local processing is not available.'
+                    }
+                  </p>
                 </div>
 
                 {/* Project Context */}

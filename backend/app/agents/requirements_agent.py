@@ -34,11 +34,13 @@ class RequirementsAgent(BaseAgent):
         Uses Claude Sonnet for consistent and accurate requirements extraction
         with lower temperature for more deterministic results.
         """
+        from app.config import settings
+        
         super().__init__(
             agent_type="requirements_extractor",
             agent_version="1.0.0",
-            llm_provider="anthropic",
-            llm_model="claude-3-5-sonnet-20241022",
+            llm_provider=settings.default_llm_provider,
+            llm_model=settings.default_llm_model,
             temperature=0.5,  # Lower for more consistent extraction
             max_retries=3,
             timeout_seconds=120,
@@ -57,30 +59,46 @@ class RequirementsAgent(BaseAgent):
         Returns:
             System prompt string with detailed instructions for requirements analysis
         """
-        return """You are an expert business analyst and requirements engineer with 15+ years of experience in software development and enterprise architecture.
+        return """You are an expert business analyst. Extract requirements from documents and structure them into JSON.
 
-Your responsibilities:
-1. Parse business requirements documents thoroughly and systematically
-2. Extract and structure requirements into clear, actionable categories:
-   - Business goals and objectives
-   - Functional requirements (what the system should do)
-   - Non-functional requirements (how the system should perform)
-   - Constraints (budget, timeline, technology, regulatory)
-   - Stakeholders and their specific concerns
-3. Identify ambiguities, gaps, and missing information
-4. Generate 5-10 clarifying questions, prioritized by importance and impact
-5. Provide a confidence score (0.0-1.0) based on document clarity and completeness
-6. Output structured JSON following the exact schema provided
+TASK: Analyze the document and extract:
+1. Business goals and objectives
+2. Functional requirements (what system should do)
+3. Non-functional requirements (performance, security, scalability, etc.)
+4. Constraints and stakeholders
+5. Generate 3-5 clarifying questions
+6. Provide confidence score (0.0-1.0)
 
-Guidelines:
-- Be thorough and systematic in your analysis
-- Ask insightful, specific questions that will help clarify requirements
-- Focus on business value and technical feasibility
-- Consider scalability, security, and maintainability
-- Identify potential risks and dependencies
-- Ensure requirements are testable and measurable
+OUTPUT: Return ONLY valid JSON in this exact format:
+{
+  "structured_requirements": {
+    "business_goals": ["goal1", "goal2"],
+    "functional_requirements": ["req1", "req2"],
+    "non_functional_requirements": {
+      "performance": ["perf1"],
+      "security": ["sec1"],
+      "scalability": ["scale1"],
+      "reliability": ["rel1"],
+      "maintainability": ["maint1"],
+      "usability": ["usab1"],
+      "compliance": ["comp1"]
+    },
+    "constraints": ["constraint1"],
+    "stakeholders": ["stakeholder1"]
+  },
+  "clarification_questions": [
+    {
+      "question": "What is the expected user load?",
+      "category": "performance",
+      "priority": 1,
+      "rationale": "Need to understand scalability requirements"
+    }
+  ],
+  "identified_gaps": ["gap1"],
+  "confidence_score": 0.8
+}
 
-Always output valid JSON wrapped in ```json code blocks. Be precise and comprehensive."""
+Be concise, accurate, and focus on actionable requirements."""
 
     async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """

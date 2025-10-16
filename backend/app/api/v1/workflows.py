@@ -688,6 +688,7 @@ async def start_architecture_workflow(
     project_id: str = Form(..., description="Project ID"),
     domain: str = Form("cloud-native", description="Project domain"),
     project_context: Optional[str] = Form(None, description="Additional project context"),
+    llm_provider: Optional[str] = Form("deepseek", description="LLM provider (deepseek, openai, anthropic)"),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -698,6 +699,7 @@ async def start_architecture_workflow(
         project_id: Project ID
         domain: Project domain (cloud-native, data-platform, enterprise)
         project_context: Optional project context
+        llm_provider: LLM provider to use (deepseek, openai, anthropic)
         db: Database session
         
     Returns:
@@ -731,7 +733,8 @@ async def start_architecture_workflow(
             document_path=file_info["file_path"],
             domain=domain,
             project_context=project_context,
-            db=db
+            db=db,
+            llm_provider=llm_provider
         )
         
         # Move file to processed directory

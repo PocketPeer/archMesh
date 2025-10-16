@@ -62,6 +62,13 @@ class Settings(BaseSettings):
     anthropic_api_key: Optional[str] = Field(
         default=None, description="Anthropic API key"
     )
+    # Local DeepSeek LLM Settings
+    deepseek_base_url: str = Field(
+        default="http://localhost:11434", description="DeepSeek local server URL"
+    )
+    deepseek_model: str = Field(
+        default="deepseek-r1", description="DeepSeek model name"
+    )
     default_llm_provider: str = Field(
         default="openai", description="Default LLM provider"
     )
@@ -100,7 +107,7 @@ class Settings(BaseSettings):
     @classmethod
     def validate_llm_provider(cls, v: str) -> str:
         """Validate LLM provider."""
-        allowed_providers = ["openai", "anthropic"]
+        allowed_providers = ["openai", "anthropic", "deepseek"]
         if v not in allowed_providers:
             raise ValueError(f"LLM provider must be one of: {allowed_providers}")
         return v

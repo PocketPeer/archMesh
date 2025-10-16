@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Project, WorkflowSession } from '@/types';
+import { Project, WorkflowSession, WorkflowStatus } from '@/types';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { 
@@ -34,10 +34,17 @@ import {
 
 export default function ProjectDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const projectId = params.id as string;
+  const workflowId = searchParams.get('workflow');
   
   const [project, setProject] = useState<Project | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowSession[]>([]);
+  const [currentWorkflow, setCurrentWorkflow] = useState<WorkflowStatus | null>(null);
+  const [workflowResults, setWorkflowResults] = useState<{
+    requirements: any;
+    architecture: any;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,6 +53,20 @@ export default function ProjectDetailPage() {
       loadWorkflows();
     }
   }, [projectId]);
+
+  useEffect(() => {
+    if (workflowId) {
+      loadCurrentWorkflow();
+      // Set up polling for real-time updates
+      const interval = setInterval(() => {
+        if (currentWorkflow?.current_stage !== 'completed' && currentWorkflow?.current_stage !== 'failed') {
+          loadCurrentWorkflow();
+        }
+      }, 5000); // Poll every 5 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [workflowId, currentWorkflow?.current_stage]);
 
   const loadProject = async () => {
     try {
@@ -66,6 +87,45 @@ export default function ProjectDetailPage() {
       toast.error('Failed to load workflows');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCurrentWorkflow = async () => {
+    if (!workflowId) return;
+    
+    try {
+      const workflowStatus = await apiClient.getWorkflowStatus(workflowId);
+      setCurrentWorkflow(workflowStatus);
+      
+      // Update workflows list to reflect current status
+      setWorkflows(prev => prev.map(w => 
+        w.id === workflowId 
+          ? { ...w, current_stage: workflowStatus.current_stage, status: workflowStatus.current_stage }
+          : w
+      ));
+
+      // Load workflow results if completed
+      if (workflowStatus.current_stage === 'completed') {
+        await loadWorkflowResults(workflowId);
+      }
+    } catch (error) {
+      console.error('Failed to load current workflow:', error);
+    }
+  };
+
+  const loadWorkflowResults = async (sessionId: string) => {
+    try {
+      const [requirements, architecture] = await Promise.all([
+        apiClient.getRequirements(sessionId).catch(() => null),
+        apiClient.getArchitecture(sessionId).catch(() => null)
+      ]);
+      
+      setWorkflowResults({
+        requirements,
+        architecture
+      });
+    } catch (error) {
+      console.error('Failed to load workflow results:', error);
     }
   };
 
@@ -215,6 +275,196 @@ export default function ProjectDetailPage() {
               </Link>
             </div>
           </div>
+
+          {/* Current Workflow Status */}
+          {currentWorkflow && (
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-purple-50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <ActivityIcon className="h-5 w-5 text-blue-600" />
+                  <span>Current Workflow Status</span>
+                  {currentWorkflow.current_stage !== 'completed' && currentWorkflow.current_stage !== 'failed' && (
+                    <RefreshCwIcon className="h-4 w-4 text-blue-600 animate-spin" />
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  Real-time updates for workflow session {workflowId}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Badge 
+                        className={`${
+                          currentWorkflow.current_stage === 'completed' 
+                            ? 'bg-green-100 text-green-800 border-green-200'
+                            : currentWorkflow.current_stage === 'failed'
+                            ? 'bg-red-100 text-red-800 border-red-200'
+                            : currentWorkflow.current_stage === 'requirements_review' || currentWorkflow.current_stage === 'architecture_review'
+                            ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                            : 'bg-blue-100 text-blue-800 border-blue-200'
+                        }`}
+                      >
+                        {currentWorkflow.current_stage === 'completed' && <CheckCircleIcon className="h-3 w-3 mr-1" />}
+                        {currentWorkflow.current_stage === 'failed' && <AlertCircleIcon className="h-3 w-3 mr-1" />}
+                        {(currentWorkflow.current_stage === 'requirements_review' || currentWorkflow.current_stage === 'architecture_review') && <ClockIcon className="h-3 w-3 mr-1" />}
+                        {!['completed', 'failed', 'requirements_review', 'architecture_review'].includes(currentWorkflow.current_stage) && <PlayIcon className="h-3 w-3 mr-1" />}
+                        {currentWorkflow.current_stage.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                      <span className="text-sm text-slate-600">
+                        Progress: {Math.round((currentWorkflow.stage_progress || 0) * 100)}%
+                      </span>
+                    </div>
+                    <Link href={`/projects/${projectId}/workflows/${workflowId}`}>
+                      <Button variant="outline" size="sm">
+                        <EyeIcon className="mr-2 h-4 w-4" />
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
+                  
+                  {currentWorkflow.current_stage === 'requirements_review' && (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <ClockIcon className="h-4 w-4 text-yellow-600" />
+                        <span className="font-medium text-yellow-800">Requirements Review Required</span>
+                      </div>
+                      <p className="text-sm text-yellow-700">
+                        Please review and approve the extracted requirements before the architecture design begins.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {currentWorkflow.current_stage === 'architecture_review' && (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <ClockIcon className="h-4 w-4 text-yellow-600" />
+                        <span className="font-medium text-yellow-800">Architecture Review Required</span>
+                      </div>
+                      <p className="text-sm text-yellow-700">
+                        Please review and approve the generated architecture design.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Workflow Results */}
+          {workflowResults && (workflowResults.requirements || workflowResults.architecture) && (
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                  <span>Workflow Results</span>
+                </CardTitle>
+                <CardDescription>
+                  Generated requirements and architecture for this project
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="requirements" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="requirements" className="flex items-center space-x-2">
+                      <FileTextIcon className="h-4 w-4" />
+                      <span>Requirements</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="architecture" className="flex items-center space-x-2">
+                      <BuildingIcon className="h-4 w-4" />
+                      <span>Architecture</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="requirements" className="mt-6">
+                    {workflowResults.requirements ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-slate-50 rounded-lg">
+                          <h4 className="font-semibold text-slate-900 mb-2">Business Goals</h4>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
+                            {workflowResults.requirements.structured_requirements?.business_goals?.map((goal: string, index: number) => (
+                              <li key={index}>{goal}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div className="p-4 bg-slate-50 rounded-lg">
+                          <h4 className="font-semibold text-slate-900 mb-2">Functional Requirements</h4>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
+                            {workflowResults.requirements.structured_requirements?.functional_requirements?.map((req: string, index: number) => (
+                              <li key={index}>{req}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div className="p-4 bg-slate-50 rounded-lg">
+                          <h4 className="font-semibold text-slate-900 mb-2">Non-Functional Requirements</h4>
+                          <div className="space-y-3">
+                            {workflowResults.requirements.structured_requirements?.non_functional_requirements && 
+                              Object.entries(workflowResults.requirements.structured_requirements.non_functional_requirements).map(([category, requirements]) => (
+                                <div key={category}>
+                                  <h5 className="font-medium text-slate-800 capitalize">{category}</h5>
+                                  <ul className="list-disc list-inside space-y-1 text-sm text-slate-700 ml-4">
+                                    {(requirements as string[]).map((req: string, index: number) => (
+                                      <li key={index}>{req}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-slate-500">
+                        <FileTextIcon className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                        <p>Requirements not available</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="architecture" className="mt-6">
+                    {workflowResults.architecture ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-slate-50 rounded-lg">
+                          <h4 className="font-semibold text-slate-900 mb-2">Architecture Overview</h4>
+                          <p className="text-sm text-slate-700">
+                            {workflowResults.architecture.overview || 'No overview available'}
+                          </p>
+                        </div>
+                        
+                        <div className="p-4 bg-slate-50 rounded-lg">
+                          <h4 className="font-semibold text-slate-900 mb-2">Key Components</h4>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
+                            {workflowResults.architecture.components?.map((component: any, index: number) => (
+                              <li key={index}>
+                                <strong>{component.name}:</strong> {component.description}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div className="p-4 bg-slate-50 rounded-lg">
+                          <h4 className="font-semibold text-slate-900 mb-2">Technology Stack</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {workflowResults.architecture.technology_stack?.map((tech: string, index: number) => (
+                              <Badge key={index} variant="secondary">{tech}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-slate-500">
+                        <BuildingIcon className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                        <p>Architecture not available</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Project Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

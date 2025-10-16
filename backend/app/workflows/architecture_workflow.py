@@ -767,7 +767,8 @@ class ArchitectureWorkflow:
         domain: str,
         project_context: Optional[str] = None,
         max_retries: int = 3,
-        db: Optional[AsyncSession] = None
+        db: Optional[AsyncSession] = None,
+        llm_provider: Optional[str] = None
     ) -> tuple[str, Dict[str, Any]]:
         """
         Start a new architecture workflow.
@@ -778,11 +779,27 @@ class ArchitectureWorkflow:
             domain: Project domain (cloud-native, data-platform, enterprise)
             project_context: Optional project context information
             max_retries: Maximum number of retries for failed stages
+            db: Database session for persistence
+            llm_provider: LLM provider to use (deepseek, openai, anthropic)
             
         Returns:
             Tuple of (session_id, initial_result)
         """
         session_id = str(uuid.uuid4())
+        
+        # Update agents with specified LLM provider if provided
+        if llm_provider:
+            from app.config import settings
+            # Temporarily override the default LLM provider for this workflow
+            original_provider = settings.default_llm_provider
+            settings.default_llm_provider = llm_provider
+            
+            # Reinitialize agents with the new provider
+            self.requirements_agent = RequirementsAgent()
+            self.architecture_agent = ArchitectureAgent()
+            
+            # Restore original provider
+            settings.default_llm_provider = original_provider
         
         # Create database session record if db is provided
         if db:

@@ -54,6 +54,7 @@ class LLMProviderEnum(str, Enum):
     
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
+    DEEPSEEK = "deepseek"
     GOOGLE = "google"
     AZURE = "azure"
     AWS = "aws"

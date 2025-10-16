@@ -31,13 +31,15 @@ class ArchitectureAgent(BaseAgent):
         """
         Initialize the Architecture Agent.
         
-        Uses Claude Opus for complex architectural reasoning and design decisions.
+        Uses the configured LLM provider for complex architectural reasoning and design decisions.
         """
+        from app.config import settings
+        
         super().__init__(
             agent_type="architecture_designer",
             agent_version="1.0.0",
-            llm_provider="anthropic",
-            llm_model="claude-3-5-sonnet-20241022",  # Using Sonnet as Opus may not be available
+            llm_provider=settings.default_llm_provider,
+            llm_model=settings.default_llm_model,
             temperature=0.5,  # Lower for more consistent architectural decisions
             max_retries=3,
             timeout_seconds=180,  # Longer timeout for complex architectural analysis
@@ -70,46 +72,32 @@ class ArchitectureAgent(BaseAgent):
         Returns:
             System prompt string with detailed instructions for architecture design
         """
-        return """You are a senior enterprise architect with 15+ years of experience and expertise in:
+        return """You are a senior enterprise architect. Design system architecture based on requirements.
 
-ARCHITECTURAL EXPERTISE:
-- Cloud-native architectures (AWS, Azure, GCP)
-- Microservices and event-driven systems
-- Data platforms and streaming architectures
-- Domain-Driven Design (DDD) and Clean Architecture
-- C4 modeling and system design documentation
-- Security, compliance, and governance
-- Performance optimization and scalability
-- DevOps and infrastructure as code
+TASK: Create comprehensive architecture design including:
+1. System overview and high-level design
+2. Technology stack recommendations
+3. Key components and their interactions
+4. Security and scalability considerations
+5. Implementation phases and priorities
 
 DESIGN PRINCIPLES:
-1. Start with business requirements and constraints
-2. Apply appropriate architectural patterns
-3. Consider scalability, security, and maintainability
-4. Design for failure and resilience
-5. Optimize for developer experience
-6. Plan for observability and monitoring
-7. Consider cost optimization and resource efficiency
+- Start with business requirements
+- Apply proven architectural patterns
+- Consider scalability, security, maintainability
+- Design for failure and resilience
+- Optimize for developer experience
 
-RESPONSIBILITIES:
-1. Design comprehensive system architectures based on requirements
-2. Recommend appropriate technology stacks with rationale
-3. Apply proven architectural patterns and best practices
-4. Create detailed C4 diagrams in Mermaid format
-5. Consider trade-offs and provide alternative approaches
-6. Address all non-functional requirements (performance, security, scalability)
-7. Ensure security and compliance from the start
-8. Provide implementation guidance and next steps
+OUTPUT: Return structured JSON with:
+- Architecture overview
+- Technology stack with rationale
+- Key components and interactions
+- Security considerations
+- Scalability approach
+- Implementation roadmap
+- C4 diagrams in Mermaid format
 
-OUTPUT REQUIREMENTS:
-- Always provide detailed rationale for architectural decisions
-- Include specific technology recommendations with alternatives
-- Generate complete C4 diagrams in Mermaid format
-- Consider cost, complexity, and team expertise in recommendations
-- Address scalability, security, and operational concerns
-- Provide clear implementation phases and priorities
-
-Always output structured JSON with complete architecture specifications and detailed explanations."""
+Be practical, specific, and focus on actionable architecture decisions."""
 
     async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """

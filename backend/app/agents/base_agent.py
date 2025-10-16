@@ -21,6 +21,11 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deepseek_client import ChatDeepSeek
+from app.core.error_handling import (
+    with_error_handling, RetryConfig, FallbackConfig, 
+    LLMError, LLMTimeoutError, LLMProviderError, error_handler
+)
 from app.models.agent_execution import AgentExecution, AgentExecutionStatus
 
 
@@ -52,6 +57,11 @@ class BaseAgent(ABC):
         "claude-3-opus-20240229": {"prompt": 0.015, "completion": 0.075},
         "claude-3-sonnet-20240229": {"prompt": 0.003, "completion": 0.015},
         "claude-3-haiku-20240307": {"prompt": 0.00025, "completion": 0.00125},
+        
+        # DeepSeek models (local - no cost)
+        "deepseek-r1": {"prompt": 0.0, "completion": 0.0},
+        "deepseek-coder": {"prompt": 0.0, "completion": 0.0},
+        "deepseek-chat": {"prompt": 0.0, "completion": 0.0},
     }
 
     def __init__(
@@ -105,7 +115,7 @@ class BaseAgent(ABC):
             }
         )
 
-    def _initialize_llm(self) -> Union[ChatOpenAI, ChatAnthropic]:
+    def _initialize_llm(self) -> Union[ChatOpenAI, ChatAnthropic, ChatDeepSeek]:
         """
         Initialize LLM based on provider.
         
@@ -139,6 +149,11 @@ class BaseAgent(ABC):
                     raise ValueError("Anthropic API key not found in environment variables")
                 llm_params["api_key"] = settings.anthropic_api_key
                 return ChatAnthropic(**llm_params)
+            elif self.llm_provider == "deepseek":
+                # Use DeepSeek local client
+                llm_params["base_url"] = settings.deepseek_base_url
+                llm_params["model"] = settings.deepseek_model
+                return ChatDeepSeek(**llm_params)
             else:
                 raise ValueError(f"Unsupported LLM provider: {self.llm_provider}")
                 
@@ -186,13 +201,17 @@ class BaseAgent(ABC):
         """
         raise NotImplementedError("Subclasses must implement get_system_prompt method")
 
+    @with_error_handling(
+        retry_config=RetryConfig(max_retries=3, base_delay=1.0, max_delay=30.0),
+        fallback_config=FallbackConfig(enable_provider_fallback=True, enable_model_fallback=True)
+    )
     async def _call_llm(
         self,
         messages: List[Union[SystemMessage, HumanMessage, AIMessage]],
         **kwargs
     ) -> str:
         """
-        Call LLM with retry logic and exponential backoff.
+        Call LLM with enhanced error handling, retry logic, and fallback mechanisms.
         
         Args:
             messages: List of messages to send to LLM
@@ -202,71 +221,57 @@ class BaseAgent(ABC):
             LLM response text
             
         Raises:
-            Exception: If all retry attempts fail
+            Exception: If all retry attempts and fallbacks fail
         """
-        last_exception = None
+        try:
+            logger.debug(
+                f"LLM call with provider: {self.llm_provider}, model: {self.llm_model}",
+                extra={
+                    "agent_type": self.agent_type,
+                    "provider": self.llm_provider,
+                    "model": self.llm_model,
+                }
+            )
+            
+            # Make the LLM call with timeout
+            response = await asyncio.wait_for(
+                self.llm.ainvoke(messages, **kwargs),
+                timeout=self.timeout_seconds
+            )
+            
+            if hasattr(response, 'content'):
+                content = response.content
+            else:
+                content = str(response)
+            
+            logger.debug(
+                f"LLM call successful",
+                extra={
+                    "agent_type": self.agent_type,
+                    "provider": self.llm_provider,
+                    "model": self.llm_model,
+                    "response_length": len(content),
+                }
+            )
+            
+            # Debug: Log the actual response for troubleshooting
+            logger.debug(f"LLM Response: {content[:1000]}...")
+            
+            return content
+            
+        except asyncio.TimeoutError as e:
+            error_handler.log_error(
+                LLMTimeoutError(f"LLM call timed out after {self.timeout_seconds}s", self.llm_provider, self.llm_model),
+                {"agent_type": self.agent_type, "timeout": self.timeout_seconds}
+            )
+            raise LLMTimeoutError(f"LLM call timed out after {self.timeout_seconds}s", self.llm_provider, self.llm_model)
         
-        for attempt in range(self.max_retries + 1):
-            try:
-                logger.debug(
-                    f"LLM call attempt {attempt + 1}/{self.max_retries + 1}",
-                    extra={
-                        "agent_type": self.agent_type,
-                        "attempt": attempt + 1,
-                        "max_retries": self.max_retries,
-                        "model": self.llm_model,
-                    }
-                )
-                
-                # Make the LLM call
-                response = await self.llm.ainvoke(messages, **kwargs)
-                
-                if hasattr(response, 'content'):
-                    content = response.content
-                else:
-                    content = str(response)
-                
-                logger.debug(
-                    f"LLM call successful",
-                    extra={
-                        "agent_type": self.agent_type,
-                        "attempt": attempt + 1,
-                        "response_length": len(content),
-                        "model": self.llm_model,
-                    }
-                )
-                
-                return content
-                
-            except Exception as e:
-                last_exception = e
-                
-                if attempt < self.max_retries:
-                    # Exponential backoff: 2^attempt seconds
-                    wait_time = 2 ** attempt
-                    logger.warning(
-                        f"LLM call failed, retrying in {wait_time}s: {str(e)}",
-                        extra={
-                            "agent_type": self.agent_type,
-                            "attempt": attempt + 1,
-                            "max_retries": self.max_retries,
-                            "wait_time": wait_time,
-                            "error": str(e),
-                        }
-                    )
-                    await asyncio.sleep(wait_time)
-                else:
-                    logger.error(
-                        f"LLM call failed after {self.max_retries + 1} attempts: {str(e)}",
-                        extra={
-                            "agent_type": self.agent_type,
-                            "max_retries": self.max_retries,
-                            "error": str(e),
-                        }
-                    )
-        
-        # If we get here, all retries failed
-        raise last_exception
+        except Exception as e:
+            error_handler.log_error(
+                LLMProviderError(f"LLM call failed: {str(e)}", self.llm_provider, self.llm_model),
+                {"agent_type": self.agent_type, "error": str(e)}
+            )
+            raise LLMProviderError(f"LLM call failed: {str(e)}", self.llm_provider, self.llm_model)
 
     def _parse_json_response(self, response: str) -> Dict[str, Any]:
         """
@@ -311,7 +316,7 @@ class BaseAgent(ABC):
                 pass
         
         # If all else fails, raise an error
-        raise ValueError(f"Could not parse JSON from response: {response[:200]}...")
+        raise ValueError(f"Could not parse JSON from response: {response[:500]}...")
 
     async def log_execution(
         self,
