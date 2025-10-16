@@ -41,11 +41,11 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
       rejectedFiles.forEach(({ file, errors }) => {
         errors.forEach((error: any) => {
           if (error.code === 'file-too-large') {
-            toast.error(`${file.name} is too large. Maximum size is 50MB.`);
+            toast.error(`${file.name || 'File'} is too large. Maximum size is 50MB.`);
           } else if (error.code === 'file-invalid-type') {
-            toast.error(`${file.name} is not a supported file type.`);
+            toast.error(`${file.name || 'File'} is not a supported file type.`);
           } else {
-            toast.error(`${file.name}: ${error.message}`);
+            toast.error(`${file.name || 'File'}: ${error.message}`);
           }
         });
       });
@@ -87,7 +87,7 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
 
         // Call the completion callback
         onUploadComplete(file);
-        toast.success(`${file.name} uploaded successfully!`);
+        toast.success(`${file.name || 'File'} uploaded successfully!`);
         
         // Check if all uploads are complete
         setTimeout(() => {
@@ -125,6 +125,7 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
   };
 
   const getFileIcon = (file: File) => {
+    if (!file.name) return '📁';
     const extension = file.name.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
@@ -224,14 +225,14 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
           <CardContent>
             <div className="space-y-4">
               {uploadedFiles.map((file, index) => (
-                <div key={`${file.name}-${index}`} className="flex items-center space-x-4 p-4 border border-slate-200 rounded-lg">
+                <div key={`${file.name || 'file'}-${index}`} className="flex items-center space-x-4 p-4 border border-slate-200 rounded-lg">
                   <div className="text-2xl">
                     {getFileIcon(file)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-slate-900 truncate">
-                        {file.name}
+                        {file.name || 'Unknown file'}
                       </p>
                       <div className="flex items-center space-x-2">
                         <Badge 
