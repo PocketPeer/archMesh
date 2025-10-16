@@ -116,6 +116,8 @@ class BaseAgent(ABC):
             ValueError: If provider is not supported
         """
         try:
+            from app.config import settings
+            
             # Prepare common parameters
             llm_params = {
                 "model": self.llm_model,
@@ -128,8 +130,14 @@ class BaseAgent(ABC):
                 llm_params["max_tokens"] = self.max_tokens
             
             if self.llm_provider == "openai":
+                if not settings.openai_api_key:
+                    raise ValueError("OpenAI API key not found in environment variables")
+                llm_params["api_key"] = settings.openai_api_key
                 return ChatOpenAI(**llm_params)
             elif self.llm_provider == "anthropic":
+                if not settings.anthropic_api_key:
+                    raise ValueError("Anthropic API key not found in environment variables")
+                llm_params["api_key"] = settings.anthropic_api_key
                 return ChatAnthropic(**llm_params)
             else:
                 raise ValueError(f"Unsupported LLM provider: {self.llm_provider}")
