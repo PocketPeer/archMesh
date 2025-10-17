@@ -4,15 +4,23 @@ export interface Project {
   name: string;
   description?: string;
   domain: 'cloud-native' | 'data-platform' | 'enterprise';
+  mode: 'greenfield' | 'brownfield';
   status: 'pending' | 'processing' | 'completed' | 'failed';
   created_at: string;
   updated_at: string;
+  // Brownfield specific fields
+  repository_url?: string;
+  existing_architecture?: ExistingArchitecture;
+  proposed_architecture?: ProposedArchitecture;
+  changes?: ArchitectureChange[];
 }
 
 export interface ProjectCreate {
   name: string;
   description?: string;
   domain: 'cloud-native' | 'data-platform' | 'enterprise';
+  mode: 'greenfield' | 'brownfield';
+  repository_url?: string;
 }
 
 // Requirements types
@@ -141,4 +149,83 @@ export interface HumanFeedback {
   comments?: string;
   constraints?: string[];
   preferences?: string[];
+}
+
+// Brownfield types
+export interface ExistingArchitecture {
+  repository_url: string;
+  branch: string;
+  services: Service[];
+  dependencies: Dependency[];
+  technology_stack: Record<string, any>;
+  quality_score: number;
+  analysis_metadata: {
+    analyzed_at: string;
+    services_count: number;
+    dependencies_count: number;
+    technologies_detected: string[];
+  };
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  type: 'service' | 'database' | 'component';
+  technology: string;
+  description: string;
+  endpoints?: string[];
+  dependencies?: string[];
+}
+
+export interface Dependency {
+  from: string;
+  to: string;
+  type: 'api-call' | 'database-call' | 'message-queue' | 'event-stream';
+  description: string;
+}
+
+export interface ProposedArchitecture {
+  architecture_overview: {
+    style: string;
+    integration_approach: string;
+    rationale: string;
+  };
+  new_services: Service[];
+  modified_services: Service[];
+  integration_points: IntegrationPoint[];
+  impact_analysis: {
+    risk_level: 'low' | 'medium' | 'high' | 'critical';
+    breaking_changes: boolean;
+    downtime_required: boolean;
+  };
+}
+
+export interface IntegrationPoint {
+  from_service: string;
+  to_service: string;
+  type: string;
+  description: string;
+  implementation_notes?: string;
+}
+
+export interface ArchitectureChange {
+  id: string;
+  type: 'add' | 'modify' | 'remove' | 'deprecate';
+  entity: 'service' | 'component' | 'dependency' | 'interface' | 'data_model';
+  name: string;
+  description: string;
+  impact: 'low' | 'medium' | 'high' | 'critical';
+  affectedServices: string[];
+  breakingChange: boolean;
+  migrationRequired: boolean;
+  estimatedEffort: number; // in hours
+  riskLevel: 'low' | 'medium' | 'high';
+  dependencies: string[];
+  metadata?: {
+    reason?: string;
+    alternatives?: string[];
+    rollbackPlan?: string;
+    testingRequired?: boolean;
+    documentationRequired?: boolean;
+  };
 }

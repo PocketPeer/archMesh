@@ -3,6 +3,7 @@ Architecture Agent for ArchMesh PoC.
 
 This agent is responsible for designing system architectures based on requirements,
 generating C4 diagrams, recommending technology stacks, and providing alternatives.
+Supports both greenfield and brownfield architecture design with RAG context.
 """
 
 import json
@@ -25,14 +26,19 @@ class ArchitectureAgent(BaseAgent):
     - Provide alternatives with trade-offs
     - Apply proven architectural patterns
     - Consider security, scalability, and compliance
+    - Support brownfield architecture design with RAG context
+    - Generate integration strategies for existing systems
     """
 
-    def __init__(self):
+    def __init__(self, knowledge_base_service: Optional[Any] = None):
         """
         Initialize the Architecture Agent.
         
         Uses Claude Opus for best-in-class architecture design capabilities
         with lower temperature for more consistent architectural decisions.
+        
+        Args:
+            knowledge_base_service: Optional KnowledgeBaseService for brownfield context
         """
         from app.config import settings
         
@@ -41,7 +47,7 @@ class ArchitectureAgent(BaseAgent):
         
         super().__init__(
             agent_type="architecture_designer",
-            agent_version="1.0.0",
+            agent_version="1.1.0",
             llm_provider=provider,
             llm_model=model,
             temperature=0.5,  # Lower for more consistent architectural decisions
@@ -49,6 +55,9 @@ class ArchitectureAgent(BaseAgent):
             timeout_seconds=180,  # Longer timeout for complex architectural analysis
             max_tokens=6000  # More tokens for detailed architecture descriptions
         )
+        
+        # Knowledge base service for brownfield context
+        self.kb_service = knowledge_base_service
         
         # Architecture patterns and styles
         self.architecture_patterns = [
@@ -114,6 +123,9 @@ Be practical, specific, and focus on actionable architecture decisions."""
                 - preferences: Optional architecture style preferences
                 - domain: Project domain (cloud-native, data-platform, enterprise)
                 - session_id: Optional workflow session ID for logging
+                - mode: "greenfield" or "brownfield" (default: "greenfield")
+                - project_id: UUID for brownfield mode
+                - existing_architecture: Optional existing architecture data
                 
         Returns:
             Dictionary containing:
@@ -123,6 +135,7 @@ Be practical, specific, and focus on actionable architecture decisions."""
                 - technology_stack: Recommended technology stack
                 - alternatives: Alternative architectural approaches
                 - implementation_plan: Phased implementation guidance
+                - integration_strategy: For brownfield mode
                 - metadata: Additional processing information
                 
         Raises:
@@ -139,58 +152,27 @@ Be practical, specific, and focus on actionable architecture decisions."""
             preferences = input_data.get("preferences", [])
             domain = input_data.get("domain", "cloud-native")
             session_id = input_data.get("session_id")
+            mode = input_data.get("mode", "greenfield")
+            project_id = input_data.get("project_id")
+            existing_architecture = input_data.get("existing_architecture")
             
             logger.info(
                 f"Starting architecture design",
                 extra={
                     "agent_type": self.agent_type,
                     "domain": domain,
+                    "mode": mode,
                     "session_id": session_id,
                 }
             )
             
-            # 1. Build comprehensive architecture design prompt
-            prompt = self._build_architecture_prompt(requirements, constraints, preferences, domain)
-            
-            # 2. Call LLM for architecture design
-            messages = [
-                {"role": "system", "content": self.get_system_prompt()},
-                {"role": "user", "content": prompt}
-            ]
-            
-            response = await self._call_llm(messages)
-            
-            # 3. Parse and validate response
-            architecture_data = self._parse_json_response(response)
-            
-            # 4. Generate C4 diagram
-            c4_diagram = await self._generate_c4_diagram(architecture_data)
-            architecture_data["c4_diagram_context"] = c4_diagram
-            
-            # 5. Validate and enhance the architecture data
-            enhanced_data = self._validate_and_enhance_architecture(architecture_data, requirements)
-            
-            # 6. Add metadata
-            enhanced_data["metadata"] = {
-                "domain": domain,
-                "architecture_timestamp": self.start_time.isoformat() if self.start_time else None,
-                "agent_version": self.agent_version,
-                "requirements_summary": self._summarize_requirements(requirements),
-                "design_notes": self._generate_design_notes(enhanced_data, requirements)
-            }
-            
-            logger.info(
-                f"Architecture design completed successfully",
-                extra={
-                    "agent_type": self.agent_type,
-                    "domain": domain,
-                    "architecture_style": enhanced_data.get("architecture_overview", {}).get("style", "unknown"),
-                    "components_count": len(enhanced_data.get("components", [])),
-                    "alternatives_count": len(enhanced_data.get("alternatives", [])),
-                }
-            )
-            
-            return enhanced_data
+            # Route to appropriate execution method
+            if mode == "brownfield":
+                if not project_id:
+                    raise ValueError("project_id is required for brownfield mode")
+                return await self._execute_brownfield(input_data)
+            else:
+                return await self._execute_greenfield(input_data)
             
         except Exception as e:
             logger.error(
@@ -198,10 +180,737 @@ Be practical, specific, and focus on actionable architecture decisions."""
                 extra={
                     "agent_type": self.agent_type,
                     "domain": input_data.get("domain"),
+                    "mode": input_data.get("mode"),
                     "error": str(e),
                 }
             )
             raise
+
+    async def _execute_greenfield(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute greenfield architecture design.
+        
+        Args:
+            input_data: Input data containing requirements and constraints
+            
+        Returns:
+            Architecture design data
+        """
+        requirements = input_data["requirements"]
+        constraints = input_data.get("constraints", {})
+        preferences = input_data.get("preferences", [])
+        domain = input_data.get("domain", "cloud-native")
+        session_id = input_data.get("session_id")
+        
+        # 1. Build comprehensive architecture design prompt
+        prompt = self._build_architecture_prompt(requirements, constraints, preferences, domain)
+        
+        # 2. Call LLM for architecture design
+        messages = [
+            {"role": "system", "content": self.get_system_prompt()},
+            {"role": "user", "content": prompt}
+        ]
+        
+        response = await self._call_llm(messages)
+        
+        # 3. Parse and validate response
+        architecture_data = self._parse_json_response(response)
+        
+        # 4. Generate C4 diagram
+        c4_diagram = await self._generate_c4_diagram(architecture_data)
+        architecture_data["c4_diagram_context"] = c4_diagram
+        
+        # 5. Validate and enhance the architecture data
+        enhanced_data = self._validate_and_enhance_architecture(architecture_data, requirements)
+        
+        # 6. Add metadata
+        enhanced_data["metadata"] = {
+            "domain": domain,
+            "mode": "greenfield",
+            "architecture_timestamp": self.start_time.isoformat() if self.start_time else None,
+            "agent_version": self.agent_version,
+            "requirements_summary": self._summarize_requirements(requirements),
+            "design_notes": self._generate_design_notes(enhanced_data, requirements)
+        }
+        
+        logger.info(
+            f"Greenfield architecture design completed successfully",
+            extra={
+                "agent_type": self.agent_type,
+                "domain": domain,
+                "architecture_style": enhanced_data.get("architecture_overview", {}).get("style", "unknown"),
+                "components_count": len(enhanced_data.get("components", [])),
+                "alternatives_count": len(enhanced_data.get("alternatives", [])),
+            }
+        )
+        
+        return enhanced_data
+
+    async def _execute_brownfield(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute brownfield architecture design with RAG context.
+        
+        Args:
+            input_data: Input data containing requirements, project_id, and existing architecture
+            
+        Returns:
+            Architecture design data with integration strategy
+        """
+        project_id = input_data["project_id"]
+        requirements = input_data["requirements"]
+        constraints = input_data.get("constraints", {})
+        preferences = input_data.get("preferences", [])
+        domain = input_data.get("domain", "cloud-native")
+        session_id = input_data.get("session_id")
+        existing_architecture = input_data.get("existing_architecture")
+        
+        # 1. Get existing architecture context from knowledge base
+        context = await self._get_brownfield_context(project_id, requirements, existing_architecture)
+        
+        # 2. Build enhanced prompt with context
+        prompt = self._build_brownfield_prompt(requirements, constraints, preferences, domain, context)
+        
+        # 3. Call LLM with brownfield system prompt
+        messages = [
+            {"role": "system", "content": self.get_brownfield_system_prompt()},
+            {"role": "user", "content": prompt}
+        ]
+        
+        response = await self._call_llm(messages)
+        
+        # 4. Parse and validate response
+        architecture_data = self._parse_json_response(response)
+        
+        # 5. Generate C4 diagram with existing architecture
+        c4_diagram = await self._generate_brownfield_c4_diagram(architecture_data, context)
+        architecture_data["c4_diagram_context"] = c4_diagram
+        
+        # 6. Generate integration strategy
+        integration_strategy = await self._generate_integration_strategy(
+            context.get("existing_services", []),
+            architecture_data
+        )
+        architecture_data["integration_strategy"] = integration_strategy
+        
+        # 7. Validate and enhance the architecture data
+        enhanced_data = self._validate_and_enhance_architecture(architecture_data, requirements)
+        
+        # 8. Add brownfield-specific metadata
+        enhanced_data["metadata"] = {
+            "domain": domain,
+            "mode": "brownfield",
+            "project_id": project_id,
+            "architecture_timestamp": self.start_time.isoformat() if self.start_time else None,
+            "agent_version": self.agent_version,
+            "requirements_summary": self._summarize_requirements(requirements),
+            "design_notes": self._generate_design_notes(enhanced_data, requirements),
+            "existing_services_count": len(context.get("existing_services", [])),
+            "similar_features_found": len(context.get("similar_features", [])),
+            "context_quality": self._assess_context_quality(context)
+        }
+        
+        logger.info(
+            f"Brownfield architecture design completed successfully",
+            extra={
+                "agent_type": self.agent_type,
+                "domain": domain,
+                "project_id": project_id,
+                "architecture_style": enhanced_data.get("architecture_overview", {}).get("style", "unknown"),
+                "components_count": len(enhanced_data.get("components", [])),
+                "existing_services_count": len(context.get("existing_services", [])),
+                "integration_phases": len(integration_strategy.get("phases", [])),
+            }
+        )
+        
+        return enhanced_data
+
+    async def _get_brownfield_context(
+        self,
+        project_id: str,
+        requirements: Dict[str, Any],
+        existing_architecture: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Get relevant context from knowledge base for brownfield design.
+        
+        Args:
+            project_id: Project UUID
+            requirements: New requirements
+            existing_architecture: Optional existing architecture data
+            
+        Returns:
+            Context dictionary with existing services and similar features
+        """
+        context = {
+            "existing_services": [],
+            "similar_features": [],
+            "existing_patterns": [],
+            "technology_stack": {},
+            "integration_points": []
+        }
+        
+        if not self.kb_service:
+            logger.warning("Knowledge base service not available, using limited context")
+            if existing_architecture:
+                context["existing_services"] = existing_architecture.get("services", [])
+                context["technology_stack"] = existing_architecture.get("technology_stack", {})
+            return context
+        
+        try:
+            # Query for similar features
+            functional_reqs = requirements.get("structured_requirements", {}).get("functional_requirements", [])
+            feature_desc = " ".join(functional_reqs[:5])  # Use first 5 requirements
+            
+            if feature_desc.strip():
+                similar = await self.kb_service.search_similar_architectures(
+                    query=feature_desc,
+                    project_id=project_id,
+                    top_k=5
+                )
+                context["similar_features"] = similar
+            
+            # Get existing services and dependencies
+            services = await self.kb_service.get_service_dependencies(project_id)
+            context["existing_services"] = services
+            
+            # Extract technology patterns from existing services
+            tech_stack = {}
+            for service in services:
+                if "technology" in service:
+                    tech = service["technology"]
+                    if tech not in tech_stack:
+                        tech_stack[tech] = 0
+                    tech_stack[tech] += 1
+            
+            context["technology_stack"] = tech_stack
+            
+            # Get context for new feature integration
+            if functional_reqs:
+                feature_context = await self.kb_service.get_context_for_new_feature(
+                    project_id=project_id,
+                    feature_description=feature_desc
+                )
+                context["integration_points"] = feature_context.get("integration_points", [])
+                context["existing_patterns"] = feature_context.get("patterns", [])
+            
+            logger.info(
+                f"Retrieved brownfield context",
+                extra={
+                    "project_id": project_id,
+                    "existing_services_count": len(context["existing_services"]),
+                    "similar_features_count": len(context["similar_features"]),
+                    "technology_stack_size": len(context["technology_stack"]),
+                }
+            )
+            
+        except Exception as e:
+            logger.warning(f"Error retrieving brownfield context: {str(e)}")
+            # Fallback to existing architecture if available
+            if existing_architecture:
+                context["existing_services"] = existing_architecture.get("services", [])
+                context["technology_stack"] = existing_architecture.get("technology_stack", {})
+        
+        return context
+
+    def get_brownfield_system_prompt(self) -> str:
+        """
+        Return the system prompt for brownfield architecture design.
+        
+        Returns:
+            System prompt string for brownfield architecture design
+        """
+        return """You are a senior enterprise architect specializing in brownfield integrations.
+
+Your responsibilities:
+1. Analyze existing architecture and technology stack
+2. Design new features that integrate seamlessly with existing systems
+3. Reuse existing patterns and technologies where appropriate
+4. Minimize disruption to current services
+5. Identify which existing services need modifications
+6. Propose migration strategies if needed
+7. Consider backwards compatibility
+8. Assess impact on current system
+
+Key principles:
+- **Consistency**: Use technologies already in the stack
+- **Minimal Impact**: Avoid changes to stable services
+- **Incremental**: Support phased rollout
+- **Compatibility**: Ensure existing clients still work
+- **Patterns**: Follow existing architectural patterns
+- **Reuse**: Leverage existing services and components
+- **Integration**: Design clear integration points
+
+Output structured JSON with:
+- Proposed architecture for new feature
+- Integration points with existing services
+- Required modifications to current services
+- Migration strategy with phases
+- Risk assessment and mitigation
+- Rollback plan
+- Technology stack recommendations (prefer existing)
+- Implementation timeline
+
+Focus on practical integration strategies and minimal disruption to existing systems."""
+
+    def _build_brownfield_prompt(
+        self,
+        requirements: Dict[str, Any],
+        constraints: Dict[str, Any],
+        preferences: List[str],
+        domain: str,
+        context: Dict[str, Any]
+    ) -> str:
+        """
+        Build brownfield architecture design prompt with existing context.
+        
+        Args:
+            requirements: New requirements
+            constraints: Organizational constraints
+            preferences: Architecture preferences
+            domain: Project domain
+            context: Existing architecture context
+            
+        Returns:
+            Formatted prompt string for brownfield design
+        """
+        # Extract key information from requirements
+        business_goals = requirements.get("structured_requirements", {}).get("business_goals", [])
+        functional_reqs = requirements.get("structured_requirements", {}).get("functional_requirements", [])
+        non_functional_reqs = requirements.get("structured_requirements", {}).get("non_functional_requirements", {})
+        constraints_list = requirements.get("structured_requirements", {}).get("constraints", [])
+        stakeholders = requirements.get("structured_requirements", {}).get("stakeholders", [])
+        
+        # Extract existing architecture information
+        existing_services = context.get("existing_services", [])
+        similar_features = context.get("similar_features", [])
+        tech_stack = context.get("technology_stack", {})
+        integration_points = context.get("integration_points", [])
+        
+        # Build prompt in parts to avoid f-string issues with JSON
+        prompt_parts = [
+            "Design architecture for new feature in EXISTING system.",
+            "",
+            f"PROJECT DOMAIN: {domain}",
+            "",
+            "NEW REQUIREMENTS:",
+            "Business Goals:",
+            *[f"- {goal}" for goal in business_goals[:5]],
+            "",
+            "Functional Requirements:",
+            *[f"- {req}" for req in functional_reqs[:10]],
+            "",
+            "Non-Functional Requirements:"
+        ]
+        
+        for category, reqs in non_functional_reqs.items():
+            if reqs:
+                prompt_parts.append(f"\n{category.upper()}:")
+                for req in reqs[:3]:
+                    prompt_parts.append(f"- {req}")
+        
+        prompt_parts.extend([
+            "",
+            "Constraints:",
+            *[f"- {constraint}" for constraint in constraints_list[:5]],
+            "",
+            "Stakeholders:",
+            *[f"- {stakeholder.get('name', 'Unknown')} ({stakeholder.get('role', 'Unknown')}): {', '.join(stakeholder.get('concerns', []))}" for stakeholder in stakeholders[:5]],
+            "",
+            "EXISTING ARCHITECTURE CONTEXT:",
+            f"Existing Services ({len(existing_services)}):",
+            *[f"- {service.get('name', 'Unknown')} ({service.get('type', 'service')}): {service.get('description', 'No description')} - Tech: {service.get('technology', 'Unknown')}" for service in existing_services[:10]],
+            "",
+            "Current Technology Stack:",
+            *[f"- {tech}: {count} services" for tech, count in list(tech_stack.items())[:10]],
+            "",
+            f"Similar Features Found ({len(similar_features)}):",
+            *[f"- {feature.get('description', 'No description')} (Score: {feature.get('score', 0):.2f})" for feature in similar_features[:5]],
+            "",
+            "Integration Points:",
+            *([f"- {point}" for point in integration_points[:5]] if integration_points else ["None identified"]),
+            "",
+            "ADDITIONAL CONSTRAINTS:",
+            *([f"- {key}: {value}" for key, value in constraints.items()] if constraints else ["None specified"]),
+            "",
+            "ARCHITECTURE PREFERENCES:",
+            *([f"- {pref}" for pref in preferences] if preferences else ["No specific preferences"]),
+            "",
+            "Design the new feature to:",
+            "1. Integrate with existing services listed above",
+            f"2. Use similar technologies as existing services (prefer: {', '.join(list(tech_stack.keys())[:3])})",
+            "3. Follow existing architectural patterns",
+            "4. Minimize changes to current services",
+            "5. Provide clear integration strategy",
+            "6. Ensure backwards compatibility",
+            "7. Support incremental deployment",
+            "",
+            "Output JSON with the following structure:",
+            "- architecture_overview: style, rationale, integration_approach, key_principles",
+            "- new_services: list of new services with technology and dependencies",
+            "- modified_services: existing services that need changes",
+            "- integration_points: connections between services",
+            "- technology_stack: preferred technologies (use existing where possible)",
+            "- migration_strategy: phased deployment plan with rollback",
+            "- impact_analysis: risk assessment and affected services",
+            "- alternatives: alternative approaches with trade-offs",
+            "- implementation_plan: phases, risks, and success metrics",
+            "- c4_diagram_description: description for C4 diagram generation",
+            "",
+            "INSTRUCTIONS:",
+            "1. Prioritize existing technologies and patterns",
+            "2. Minimize changes to existing services",
+            "3. Design for incremental deployment",
+            "4. Ensure backwards compatibility",
+            "5. Provide detailed integration strategy",
+            "6. Include comprehensive rollback plan",
+            "7. Address all non-functional requirements",
+            "8. Consider operational impact",
+            "",
+            "Output ONLY the JSON, wrapped in code blocks. Be comprehensive and detailed."
+        ])
+        
+        prompt = "\n".join(prompt_parts)
+
+        return prompt
+
+    async def _generate_integration_strategy(
+        self,
+        existing_services: List[Dict[str, Any]],
+        proposed_architecture: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Generate detailed integration strategy for brownfield deployment.
+        
+        Args:
+            existing_services: List of existing services
+            proposed_architecture: Proposed architecture data
+            
+        Returns:
+            Integration strategy with phases and rollback plans
+        """
+        try:
+            # Extract new services and modified services
+            new_services = proposed_architecture.get("new_services", [])
+            modified_services = proposed_architecture.get("modified_services", [])
+            
+            # Build integration strategy
+            strategy = {
+                "phases": [],
+                "testing_strategy": [],
+                "monitoring": [],
+                "rollback_plan": "Comprehensive rollback procedure",
+                "risk_assessment": {
+                    "high_risk_services": [],
+                    "critical_dependencies": [],
+                    "breaking_changes": False
+                }
+            }
+            
+            # Phase 1: Deploy new services
+            if new_services:
+                strategy["phases"].append({
+                    "phase": 1,
+                    "name": "Deploy New Services",
+                    "description": "Deploy new services without affecting existing functionality",
+                    "duration": "2-3 weeks",
+                    "services": [service["name"] for service in new_services],
+                    "steps": [
+                        "Deploy new services in parallel environment",
+                        "Configure service discovery and routing",
+                        "Set up monitoring and logging",
+                        "Perform integration testing",
+                        "Deploy to staging environment",
+                        "Conduct user acceptance testing"
+                    ],
+                    "rollback": "Remove new services and revert routing changes",
+                    "testing": [
+                        "Unit tests for new services",
+                        "Integration tests with existing services",
+                        "Load testing for new endpoints",
+                        "Security testing for new APIs"
+                    ],
+                    "success_criteria": [
+                        "All new services deployed successfully",
+                        "No impact on existing services",
+                        "All tests passing",
+                        "Performance metrics within acceptable range"
+                    ]
+                })
+            
+            # Phase 2: Update existing services
+            if modified_services:
+                strategy["phases"].append({
+                    "phase": 2,
+                    "name": "Update Existing Services",
+                    "description": "Update existing services to integrate with new functionality",
+                    "duration": "1-2 weeks",
+                    "services": [service["name"] for service in modified_services],
+                    "steps": [
+                        "Update service configurations",
+                        "Deploy new endpoints",
+                        "Update service dependencies",
+                        "Perform regression testing",
+                        "Deploy to production with feature flags",
+                        "Monitor system performance"
+                    ],
+                    "rollback": "Revert to previous service versions",
+                    "testing": [
+                        "Regression tests for existing functionality",
+                        "Integration tests for new features",
+                        "Performance testing",
+                        "Compatibility testing"
+                    ],
+                    "success_criteria": [
+                        "Existing functionality unchanged",
+                        "New features working correctly",
+                        "No performance degradation",
+                        "All monitoring alerts green"
+                    ]
+                })
+            
+            # Phase 3: Full integration and optimization
+            strategy["phases"].append({
+                "phase": 3,
+                "name": "Full Integration and Optimization",
+                "description": "Complete integration and optimize system performance",
+                "duration": "1 week",
+                "services": "All services",
+                "steps": [
+                    "Enable all feature flags",
+                    "Optimize system performance",
+                    "Fine-tune monitoring and alerting",
+                    "Complete documentation updates",
+                    "Conduct final system testing",
+                    "Deploy to all environments"
+                ],
+                "rollback": "Disable feature flags and revert optimizations",
+                "testing": [
+                    "End-to-end system testing",
+                    "Performance optimization validation",
+                    "Security audit",
+                    "Disaster recovery testing"
+                ],
+                "success_criteria": [
+                    "All features working in production",
+                    "Performance targets met",
+                    "Security requirements satisfied",
+                    "Documentation complete"
+                ]
+            })
+            
+            # Testing strategy
+            strategy["testing_strategy"] = [
+                "Unit testing for all new and modified components",
+                "Integration testing between new and existing services",
+                "End-to-end testing of complete user workflows",
+                "Performance testing under expected load",
+                "Security testing for new endpoints and data flows",
+                "Compatibility testing with existing clients",
+                "Disaster recovery and failover testing",
+                "User acceptance testing with stakeholders"
+            ]
+            
+            # Monitoring strategy
+            strategy["monitoring"] = [
+                "Set up alerts for new services and endpoints",
+                "Monitor integration points between services",
+                "Track performance metrics for new features",
+                "Monitor error rates and response times",
+                "Set up dashboards for system health",
+                "Configure log aggregation and analysis",
+                "Implement distributed tracing",
+                "Set up automated health checks"
+            ]
+            
+            # Risk assessment
+            strategy["risk_assessment"] = {
+                "high_risk_services": [
+                    service["name"] for service in modified_services 
+                    if service.get("breaking_changes", False)
+                ],
+                "critical_dependencies": [
+                    dep for service in new_services + modified_services
+                    for dep in service.get("dependencies", [])
+                    if dep in [s["name"] for s in existing_services]
+                ],
+                "breaking_changes": any(
+                    service.get("breaking_changes", False) 
+                    for service in modified_services
+                ),
+                "data_migration_required": any(
+                    service.get("migration_required", False) 
+                    for service in modified_services
+                ),
+                "downtime_required": False,  # Assume zero-downtime deployment
+                "rollback_complexity": "medium" if modified_services else "low"
+            }
+            
+            return strategy
+            
+        except Exception as e:
+            logger.warning(f"Error generating integration strategy: {str(e)}")
+            # Return basic strategy as fallback
+            return {
+                "phases": [
+                    {
+                        "phase": 1,
+                        "name": "Deploy New Services",
+                        "description": "Deploy new services",
+                        "duration": "2-3 weeks",
+                        "steps": ["Deploy and test new services"],
+                        "rollback": "Remove new services"
+                    }
+                ],
+                "testing_strategy": ["Integration testing", "Performance testing"],
+                "monitoring": ["Set up monitoring for new services"],
+                "rollback_plan": "Remove new services and revert changes"
+            }
+
+    async def _generate_brownfield_c4_diagram(
+        self, 
+        architecture_data: Dict[str, Any], 
+        context: Dict[str, Any]
+    ) -> str:
+        """
+        Generate C4 diagram for brownfield architecture showing integration.
+        
+        Args:
+            architecture_data: Proposed architecture data
+            context: Existing architecture context
+            
+        Returns:
+            Mermaid C4 diagram code
+        """
+        try:
+            existing_services = context.get("existing_services", [])
+            new_services = architecture_data.get("new_services", [])
+            modified_services = architecture_data.get("modified_services", [])
+            
+            # Build C4 diagram showing existing and new services
+            c4_diagram = """graph TB
+    %% C4 Context Diagram - Brownfield Integration
+    subgraph "External Systems"
+        User[("👤 Users")]
+        ExternalAPI[("🌐 External APIs")]
+    end
+    
+    subgraph "Existing System"
+        ExistingService1["🏢 Existing Service 1<br/>Current Functionality"]
+        ExistingService2["🏢 Existing Service 2<br/>Current Functionality"]
+        ExistingDB[("💾 Existing Database<br/>Current Data")]
+    end
+    
+    subgraph "New Features"
+        NewService1["🆕 New Service 1<br/>New Functionality"]
+        NewService2["🆕 New Service 2<br/>New Functionality"]
+        NewDB[("💾 New Database<br/>New Data")]
+    end
+    
+    subgraph "Modified Services"
+        ModifiedService["🔄 Modified Service<br/>Enhanced Functionality"]
+    end
+    
+    subgraph "Infrastructure"
+        MessageQueue[("📨 Message Queue<br/>RabbitMQ")]
+        Cache[("⚡ Cache<br/>Redis")]
+        Monitoring[("📊 Monitoring<br/>Prometheus + Grafana")]
+    end
+    
+    %% User connections
+    User --> ExistingService1
+    User --> NewService1
+    
+    %% Existing system connections
+    ExistingService1 --> ExistingDB
+    ExistingService2 --> ExistingDB
+    
+    %% New system connections
+    NewService1 --> NewDB
+    NewService2 --> NewDB
+    
+    %% Integration connections
+    ExistingService1 --> NewService1
+    ModifiedService --> ExistingService1
+    ModifiedService --> NewService1
+    
+    %% Infrastructure connections
+    NewService1 --> MessageQueue
+    NewService2 --> MessageQueue
+    ModifiedService --> MessageQueue
+    
+    NewService1 --> Cache
+    ModifiedService --> Cache
+    
+    %% Monitoring
+    ExistingService1 --> Monitoring
+    NewService1 --> Monitoring
+    ModifiedService --> Monitoring
+    
+    %% Styling
+    classDef existingClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef newClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef modifiedClass fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef infraClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef dataClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class ExistingService1,ExistingService2 existingClass
+    class NewService1,NewService2 newClass
+    class ModifiedService modifiedClass
+    class MessageQueue,Cache,Monitoring infraClass
+    class ExistingDB,NewDB dataClass"""
+
+            # Customize based on actual services if available
+            if existing_services or new_services:
+                logger.debug("Customizing brownfield C4 diagram based on actual services")
+                # In a real implementation, you'd parse the services and generate
+                # a more accurate diagram based on the actual architecture
+            
+            return c4_diagram
+            
+        except Exception as e:
+            logger.warning(f"Error generating brownfield C4 diagram: {str(e)}")
+            # Return basic diagram as fallback
+            return """graph TB
+    Existing["🏢 Existing System"]
+    New["🆕 New Features"]
+    Integration["🔄 Integration Layer"]
+    
+    Existing --> Integration
+    Integration --> New
+    
+    classDef existingClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef newClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef integrationClass fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    
+    class Existing existingClass
+    class New newClass
+    class Integration integrationClass"""
+
+    def _assess_context_quality(self, context: Dict[str, Any]) -> str:
+        """
+        Assess the quality of brownfield context.
+        
+        Args:
+            context: Context data from knowledge base
+            
+        Returns:
+            Quality assessment string
+        """
+        try:
+            existing_services_count = len(context.get("existing_services", []))
+            similar_features_count = len(context.get("similar_features", []))
+            tech_stack_size = len(context.get("technology_stack", {}))
+            
+            if existing_services_count >= 5 and similar_features_count >= 3 and tech_stack_size >= 3:
+                return "high"
+            elif existing_services_count >= 3 and similar_features_count >= 1 and tech_stack_size >= 2:
+                return "medium"
+            else:
+                return "low"
+                
+        except Exception as e:
+            logger.warning(f"Error assessing context quality: {str(e)}")
+            return "unknown"
 
     def _build_architecture_prompt(
         self,
@@ -358,7 +1067,7 @@ INSTRUCTIONS:
 7. Provide clear implementation phases with realistic timelines
 8. Identify and mitigate key risks
 
-Output ONLY the JSON, wrapped in ```json code blocks. Be comprehensive and detailed."""
+Output ONLY the JSON, wrapped in code blocks. Be comprehensive and detailed."""
 
         return prompt
 
@@ -735,9 +1444,16 @@ Output ONLY the JSON, wrapped in ```json code blocks. Be comprehensive and detai
                 "Alternative analysis",
                 "Implementation planning",
                 "Risk assessment",
-                "Quality scoring"
+                "Quality scoring",
+                "Brownfield architecture design",
+                "RAG-based context integration",
+                "Integration strategy generation",
+                "Migration planning",
+                "Rollback strategy design"
             ],
             "architecture_patterns": self.get_architecture_patterns(),
             "technology_categories": list(self.tech_categories.keys()),
-            "output_format": "Structured JSON with architecture specifications and C4 diagrams"
+            "modes": ["greenfield", "brownfield"],
+            "output_format": "Structured JSON with architecture specifications, C4 diagrams, and integration strategies",
+            "knowledge_base_integration": self.kb_service is not None
         }

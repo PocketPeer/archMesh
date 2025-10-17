@@ -19,7 +19,7 @@ from app.config import settings
 from app.core.database import init_db, close_db
 from app.core.redis_client import init_redis, close_redis
 from app.core.logging_config import get_logger
-from app.api.v1 import health, projects, workflows
+from app.api.v1 import health, projects, workflows, brownfield
 
 logger = get_logger(__name__)
 
@@ -205,6 +205,12 @@ app.include_router(
     tags=["workflows"],
 )
 
+app.include_router(
+    brownfield.router,
+    prefix=settings.api_v1_prefix,
+    tags=["brownfield"],
+)
+
 
 # Root endpoint
 @app.get("/", tags=["root"])
@@ -255,6 +261,10 @@ def custom_openapi():
         {
             "name": "workflows",
             "description": "Workflow session management endpoints",
+        },
+        {
+            "name": "brownfield",
+            "description": "Brownfield analysis and knowledge base endpoints",
         },
         {
             "name": "root",

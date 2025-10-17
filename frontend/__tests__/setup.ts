@@ -2,6 +2,7 @@
  * Test setup file for frontend tests.
  */
 
+import React from 'react';
 import '@testing-library/jest-dom';
 
 // Mock Next.js router
@@ -26,12 +27,8 @@ jest.mock('next/navigation', () => ({
 
 // Mock Next.js Link component
 jest.mock('next/link', () => {
-  return ({ children, href, ...props }: any) => {
-    return (
-      <a href={href} {...props}>
-        {children}
-      </a>
-    );
+  return function MockLink({ children, href, ...props }: any) {
+    return React.createElement('a', { href, ...props }, children);
   };
 });
 
@@ -45,23 +42,7 @@ jest.mock('sonner', () => ({
   },
 }));
 
-// Mock API client
-jest.mock('@/lib/api-client', () => ({
-  apiClient: {
-    getProjects: jest.fn(),
-    getProject: jest.fn(),
-    createProject: jest.fn(),
-    updateProject: jest.fn(),
-    deleteProject: jest.fn(),
-    listWorkflows: jest.fn(),
-    getWorkflowStatus: jest.fn(),
-    getRequirements: jest.fn(),
-    getArchitecture: jest.fn(),
-    startArchitectureWorkflow: jest.fn(),
-    submitReview: jest.fn(),
-    getHealth: jest.fn(),
-  },
-}));
+// Note: API client mocking is handled per test file as needed
 
 // Mock fetch globally
 global.fetch = jest.fn();

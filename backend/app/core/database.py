@@ -15,16 +15,30 @@ from sqlalchemy.pool import NullPool
 from app.config import settings
 
 # Create async engine with connection pooling
-engine = create_async_engine(
-    settings.database_url,
-    pool_size=settings.database_pool_size,
-    max_overflow=settings.database_max_overflow,
-    pool_pre_ping=True,
-    pool_recycle=3600,  # Recycle connections every hour
-    echo=settings.debug,  # Log SQL queries in debug mode
-    # Use NullPool for testing to avoid connection issues
-    poolclass=NullPool if settings.environment == "testing" else None,
+# Use in-memory SQLite for testing, PostgreSQL for other environments
+database_url = (
+    "sqlite+aiosqlite:///:memory:" if settings.environment == "test" 
+    else settings.database_url
 )
+
+# Configure engine parameters based on database type
+if settings.environment == "test":
+    # SQLite configuration
+    engine = create_async_engine(
+        database_url,
+        echo=settings.debug,
+        poolclass=NullPool,
+    )
+else:
+    # PostgreSQL configuration
+    engine = create_async_engine(
+        database_url,
+        pool_size=settings.database_pool_size,
+        max_overflow=settings.database_max_overflow,
+        pool_pre_ping=True,
+        pool_recycle=3600,  # Recycle connections every hour
+        echo=settings.debug,  # Log SQL queries in debug mode
+    )
 
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(

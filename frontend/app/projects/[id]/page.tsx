@@ -7,9 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Project, WorkflowSession, WorkflowStatus } from '@/types';
+import { Project, WorkflowSession, WorkflowStatus, ExistingArchitecture, ProposedArchitecture, ArchitectureChange } from '@/types';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import ModeSelector from '@/src/components/ModeSelector';
+import GitHubConnector from '@/src/components/GitHubConnector';
+import ArchitectureComparison from '@/src/components/architecture/ArchitectureComparison';
+import { ArchitectureGraph } from '@/src/types/architecture';
 import { 
   ArrowLeftIcon, 
   UploadIcon, 
@@ -46,6 +50,9 @@ export default function ProjectDetailPage() {
     architecture: any;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [existingArchitecture, setExistingArchitecture] = useState<ExistingArchitecture | null>(null);
+  const [proposedArchitecture, setProposedArchitecture] = useState<ProposedArchitecture | null>(null);
+  const [architectureChanges, setArchitectureChanges] = useState<ArchitectureChange[]>([]);
 
   useEffect(() => {
     if (projectId) {
@@ -99,8 +106,8 @@ export default function ProjectDetailPage() {
       
       // Update workflows list to reflect current status
       setWorkflows(prev => prev.map(w => 
-        w.id === workflowId 
-          ? { ...w, current_stage: workflowStatus.current_stage, status: workflowStatus.current_stage }
+        w.session_id === workflowId 
+          ? { ...w, current_stage: workflowStatus.current_stage }
           : w
       ));
 
@@ -126,6 +133,121 @@ export default function ProjectDetailPage() {
       });
     } catch (error) {
       console.error('Failed to load workflow results:', error);
+    }
+  };
+
+  const updateProjectMode = async (mode: 'greenfield' | 'brownfield') => {
+    if (!project) return;
+    
+    try {
+      const updatedProject = { ...project, mode };
+      setProject(updatedProject);
+      
+      // In a real implementation, this would call the backend API
+      // await apiClient.updateProject(projectId, { mode });
+      
+      toast.success(`Project mode updated to ${mode === 'greenfield' ? 'New Project' : 'Existing System'}`);
+    } catch (error) {
+      console.error('Failed to update project mode:', error);
+      toast.error('Failed to update project mode');
+    }
+  };
+
+  const handleGitHubAnalysisComplete = (analysis: any) => {
+    setExistingArchitecture(analysis);
+    
+    // Update project with repository URL
+    if (project) {
+      setProject({
+        ...project,
+        repository_url: analysis.repository_url,
+        existing_architecture: analysis
+      });
+    }
+    
+    toast.success('Repository analysis completed successfully');
+  };
+
+  const handleGitHubAnalysisError = (error: string) => {
+    toast.error(`Repository analysis failed: ${error}`);
+  };
+
+  const approveIntegration = async () => {
+    try {
+      // In a real implementation, this would call the backend API
+      // await apiClient.approveIntegration(projectId);
+      
+      toast.success('Integration approved successfully');
+    } catch (error) {
+      console.error('Failed to approve integration:', error);
+      toast.error('Failed to approve integration');
+    }
+  };
+
+  const rejectIntegration = async () => {
+    try {
+      // In a real implementation, this would call the backend API
+      // await apiClient.rejectIntegration(projectId);
+      
+      toast.success('Integration rejected');
+    } catch (error) {
+      console.error('Failed to reject integration:', error);
+      toast.error('Failed to reject integration');
+    }
+  };
+
+  const convertToArchitectureGraph = (architecture: ExistingArchitecture | ProposedArchitecture): ArchitectureGraph => {
+    if ('services' in architecture) {
+      // ExistingArchitecture
+      const services = architecture.services.map((service, index) => ({
+        id: service.id,
+        name: service.name,
+        type: (service.type === 'database' ? 'database' : 'service') as any,
+        technology: service.technology,
+        status: 'healthy' as const,
+        description: service.description,
+        position: { x: (index % 3) * 200, y: Math.floor(index / 3) * 150 },
+        metadata: {
+          endpoints: service.endpoints,
+          dependencies: service.dependencies
+        }
+      }));
+
+      const dependencies = architecture.dependencies.map((dep, index) => ({
+        id: `e-${dep.from}-${dep.to}`,
+        source: dep.from,
+        target: dep.to,
+        type: dep.type as any,
+        description: dep.description
+      }));
+
+      return { services, dependencies };
+    } else {
+      // ProposedArchitecture
+      const allServices = [...architecture.new_services, ...architecture.modified_services];
+      const services = allServices.map((service, index) => ({
+        id: service.id,
+        name: service.name,
+        type: (service.type === 'database' ? 'database' : 'service') as any,
+        technology: service.technology,
+        status: 'healthy' as const,
+        description: service.description,
+        position: { x: (index % 3) * 200, y: Math.floor(index / 3) * 150 },
+        metadata: {
+          endpoints: service.endpoints,
+          dependencies: service.dependencies
+        }
+      }));
+
+      const dependencies = architecture.integration_points.map((point, index) => ({
+        id: `e-${point.from_service}-${point.to_service}`,
+        source: point.from_service,
+        target: point.to_service,
+        type: point.type as any,
+        description: point.description
+      }));
+
+      return { services, dependencies };
     }
   };
 
@@ -276,6 +398,167 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
+          {/* Mode Selector */}
+          <ModeSelector
+            value={project.mode || 'greenfield'}
+            onChange={updateProjectMode}
+            className="mb-8"
+          />
+
+          {/* Brownfield-specific sections */}
+          {project.mode === 'brownfield' && (
+            <div className="space-y-6">
+              {/* GitHub Repository Analysis */}
+              {!existingArchitecture && (
+                <GitHubConnector
+                  projectId={projectId}
+                  onAnalysisComplete={handleGitHubAnalysisComplete}
+                  onError={handleGitHubAnalysisError}
+                />
+              )}
+
+              {/* Existing Architecture Visualization */}
+              {existingArchitecture && (
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <BuildingIcon className="h-5 w-5 text-blue-600" />
+                      <span>Current Architecture</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Existing system architecture from {existingArchitecture.repository_url}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <BuildingIcon className="h-5 w-5 text-blue-500" />
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Services</span>
+                        </div>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                          {existingArchitecture.analysis_metadata.services_count}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <ActivityIcon className="h-5 w-5 text-green-500" />
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Dependencies</span>
+                        </div>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                          {existingArchitecture.analysis_metadata.dependencies_count}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <BarChart3Icon className="h-5 w-5 text-purple-500" />
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Quality Score</span>
+                        </div>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                          {Math.round(existingArchitecture.quality_score * 100)}%
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Technologies */}
+                    <div className="mb-4">
+                      <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                        Technologies Detected
+                      </h5>
+                      <div className="flex flex-wrap gap-2">
+                        {existingArchitecture.analysis_metadata.technologies_detected.map((tech) => (
+                          <Badge key={tech} variant="secondary">{tech}</Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Services List */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                        Services Found
+                      </h5>
+                      <div className="space-y-2">
+                        {existingArchitecture.services.map((service) => (
+                          <div
+                            key={service.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                          >
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-gray-100">{service.name}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">{service.description}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{service.technology}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{service.type}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Architecture Comparison */}
+              {existingArchitecture && proposedArchitecture && (
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <ActivityIcon className="h-5 w-5 text-orange-600" />
+                      <span>Architecture Comparison</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Compare current architecture with proposed changes
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ArchitectureComparison
+                      currentArchitecture={convertToArchitectureGraph(existingArchitecture)}
+                      proposedArchitecture={convertToArchitectureGraph(proposedArchitecture)}
+                      changes={architectureChanges}
+                      impactAnalysis={{
+                        overallImpact: 'high',
+                        affectedSystems: ['user-service', 'payment-service'],
+                        riskFactors: {
+                          breakingChanges: 2,
+                          dataMigrationRequired: false,
+                          downtimeRequired: false,
+                          rollbackComplexity: 'medium',
+                          testingComplexity: 'high'
+                        },
+                        recommendations: {
+                          implementation: ['Implement feature flags', 'Use gradual rollout'],
+                          testing: ['Integration testing', 'Performance testing'],
+                          deployment: ['Blue-green deployment', 'Canary releases'],
+                          monitoring: ['Enhanced logging', 'Performance metrics']
+                        },
+                        timeline: {
+                          planning: 5,
+                          development: 10,
+                          testing: 7,
+                          deployment: 3,
+                          total: 25
+                        }
+                      }}
+                      onApprove={(approval) => {
+                        console.log('Approval:', approval);
+                        approveIntegration();
+                      }}
+                      onReject={(reason) => {
+                        console.log('Rejection reason:', reason);
+                        rejectIntegration();
+                      }}
+                      onExport={(format) => {
+                        console.log('Export format:', format);
+                        toast.success(`Exporting comparison as ${format.toUpperCase()}`);
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
           {/* Current Workflow Status */}
           {currentWorkflow && (
             <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-purple-50">
@@ -313,7 +596,7 @@ export default function ProjectDetailPage() {
                         {currentWorkflow.current_stage.replace('_', ' ').toUpperCase()}
                       </Badge>
                       <span className="text-sm text-slate-600">
-                        Progress: {Math.round((currentWorkflow.stage_progress || 0) * 100)}%
+                        Stage: {currentWorkflow.current_stage}
                       </span>
                     </div>
                     <Link href={`/projects/${projectId}/workflows/${workflowId}`}>

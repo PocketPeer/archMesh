@@ -60,8 +60,8 @@ class TestRequirementsAgent:
     async def test_execute_llm_timeout(self, agent):
         """Test handling of LLM timeout errors."""
         with patch.object(agent, '_call_llm', side_effect=LLMTimeoutError("Timeout", "deepseek", "deepseek-r1")):
-            with patch('builtins.open', MagicMock()):
-                with patch('os.path.exists', return_value=True):
+            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
+                with patch('pathlib.Path.exists', return_value=True):
                     result = await agent.execute({
                         "document_path": "/test/path/document.txt",
                         "project_context": "Test context",
@@ -76,8 +76,8 @@ class TestRequirementsAgent:
     async def test_execute_llm_provider_error(self, agent):
         """Test handling of LLM provider errors."""
         with patch.object(agent, '_call_llm', side_effect=LLMProviderError("Provider error", "deepseek", "deepseek-r1")):
-            with patch('builtins.open', MagicMock()):
-                with patch('os.path.exists', return_value=True):
+            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
+                with patch('pathlib.Path.exists', return_value=True):
                     result = await agent.execute({
                         "document_path": "/test/path/document.txt",
                         "project_context": "Test context",
@@ -92,8 +92,8 @@ class TestRequirementsAgent:
     async def test_execute_invalid_json(self, agent):
         """Test handling of invalid JSON responses."""
         with patch.object(agent, '_call_llm', return_value="invalid json response"):
-            with patch('builtins.open', MagicMock()):
-                with patch('os.path.exists', return_value=True):
+            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
+                with patch('pathlib.Path.exists', return_value=True):
                     result = await agent.execute({
                         "document_path": "/test/path/document.txt",
                         "project_context": "Test context",

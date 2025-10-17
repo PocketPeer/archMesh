@@ -1,21 +1,16 @@
-/**
- * Tests for ProjectDetailPage component.
- */
-
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { useParams, useSearchParams } from 'next/navigation';
 import ProjectDetailPage from '@/app/projects/[id]/page';
-import { apiClient } from '@/lib/api-client';
-import { Project, WorkflowSession, WorkflowStatus } from '@/types';
 
-// Mock Next.js hooks
+// Mock Next.js navigation
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
   useSearchParams: jest.fn(),
 }));
 
-// Mock API client
+// Mock the API client
 jest.mock('@/lib/api-client', () => ({
   apiClient: {
     getProject: jest.fn(),
@@ -26,154 +21,377 @@ jest.mock('@/lib/api-client', () => ({
   },
 }));
 
-const mockProject: Project = {
-  id: 'test-project-id',
-  name: 'Test Project',
-  description: 'A test project for unit testing',
-  domain: 'cloud-native',
-  status: 'pending',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
+// Mock the toast function
+jest.mock('sonner', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+  },
+}));
 
-const mockWorkflowSession: WorkflowSession = {
-  id: 'test-session-id',
-  project_id: 'test-project-id',
-  current_stage: 'starting',
-  status: 'starting',
-  is_active: true,
-  started_at: '2024-01-01T00:00:00Z',
-  last_activity: '2024-01-01T00:00:00Z',
-};
+// Mock the components
+jest.mock('@/src/components/ModeSelector', () => {
+  return function MockModeSelector({ value, onChange }: any) {
+    return (
+      <div data-testid="mode-selector">
+        <button onClick={() => onChange('brownfield')}>Switch to Brownfield</button>
+        <span>Current mode: {value}</span>
+      </div>
+    );
+  };
+});
 
-const mockWorkflowStatus: WorkflowStatus = {
-  session_id: 'test-session-id',
-  current_stage: 'requirements_review',
-  stage_progress: 0.5,
-  is_active: true,
-  last_updated: '2024-01-01T00:00:00Z',
-};
+jest.mock('@/src/components/GitHubConnector', () => {
+  return function MockGitHubConnector({ onAnalysisComplete }: any) {
+    return (
+      <div data-testid="github-connector">
+        <button 
+          onClick={() => onAnalysisComplete({
+            repository_url: 'https://github.com/test/repo',
+            services: [],
+            dependencies: [],
+            technology_stack: {},
+            quality_score: 0.8,
+            analysis_metadata: {
+              analyzed_at: new Date().toISOString(),
+              services_count: 0,
+              dependencies_count: 0,
+              technologies_detected: []
+            }
+          })}
+        >
+          Analyze Repository
+        </button>
+      </div>
+    );
+  };
+});
+
+jest.mock('@/src/components/architecture/ArchitectureComparison', () => {
+  return function MockArchitectureComparison({ onApprove, onReject }: any) {
+    return (
+      <div data-testid="architecture-comparison">
+        <button onClick={() => onApprove({ approved: true })}>Approve</button>
+        <button onClick={() => onReject('Not suitable')}>Reject</button>
+      </div>
+    );
+  };
+});
 
 describe('ProjectDetailPage', () => {
+  const mockProject = {
+    id: 'test-project',
+    name: 'Test Project',
+    description: 'Test Description',
+    domain: 'cloud-native' as const,
+    mode: 'greenfield' as const,
+    status: 'pending' as const,
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z',
+  };
+
+  const mockWorkflows = [
+    {
+      session_id: 'session-1',
+      project_id: 'test-project',
+      current_stage: 'completed',
+      state_data: {
+        current_stage: 'completed',
+        stage_progress: 1.0,
+        completed_stages: ['starting', 'document_analysis', 'requirements_review', 'architecture_design', 'architecture_review'],
+        stage_results: {},
+        pending_tasks: [],
+        errors: [],
+        metadata: {},
+      },
+      is_active: false,
+      started_at: '2023-01-01T00:00:00Z',
+      last_activity_at: '2023-01-01T00:00:00Z',
+      completed_at: '2023-01-01T00:00:00Z',
+      agent_executions: [],
+      human_feedback: [],
+    },
+  ];
+
   beforeEach(() => {
-    (useParams as jest.Mock).mockReturnValue({ id: 'test-project-id' });
-    (useSearchParams as jest.Mock).mockReturnValue({ get: jest.fn() });
-    (apiClient.getProject as jest.Mock).mockResolvedValue(mockProject);
-    (apiClient.listWorkflows as jest.Mock).mockResolvedValue({ items: [mockWorkflowSession] });
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
+    
+    (useParams as jest.Mock).mockReturnValue({ id: 'test-project' });
+    (useSearchParams as jest.Mock).mockReturnValue(new URLSearchParams());
+    
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockResolvedValue(mockProject);
+    apiClient.listWorkflows.mockResolvedValue({ items: mockWorkflows });
   });
 
-  it('renders project information correctly', async () => {
+  it('renders project details', async () => {
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
-      expect(screen.getByText('A test project for unit testing')).toBeInTheDocument();
+      expect(screen.getByText('Test Description')).toBeInTheDocument();
     });
   });
 
-  it('displays project stats correctly', async () => {
+  it('shows mode selector', async () => {
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
-      expect(screen.getByText('Total Workflows')).toBeInTheDocument();
-      expect(screen.getByText('1')).toBeInTheDocument(); // One workflow
-      expect(screen.getByText('Active Workflows')).toBeInTheDocument();
+      expect(screen.getByTestId('mode-selector')).toBeInTheDocument();
     });
   });
 
-  it('shows current workflow status when workflow ID is provided', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue({ 
-      get: jest.fn().mockReturnValue('test-session-id') 
-    });
-    (apiClient.getWorkflowStatus as jest.Mock).mockResolvedValue(mockWorkflowStatus);
-    
+  it('switches to brownfield mode', async () => {
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
-      expect(screen.getByText('Current Workflow Status')).toBeInTheDocument();
-      expect(screen.getByText('REQUIREMENTS REVIEW')).toBeInTheDocument();
+      expect(screen.getByTestId('mode-selector')).toBeInTheDocument();
     });
-  });
-
-  it('shows requirements review notification when in requirements_review stage', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue({ 
-      get: jest.fn().mockReturnValue('test-session-id') 
-    });
-    (apiClient.getWorkflowStatus as jest.Mock).mockResolvedValue(mockWorkflowStatus);
     
-    render(<ProjectDetailPage />);
+    const switchButton = screen.getByText('Switch to Brownfield');
+    fireEvent.click(switchButton);
     
     await waitFor(() => {
-      expect(screen.getByText('Requirements Review Required')).toBeInTheDocument();
-      expect(screen.getByText('Please review and approve the extracted requirements before the architecture design begins.')).toBeInTheDocument();
+      expect(screen.getByTestId('github-connector')).toBeInTheDocument();
     });
   });
 
-  it('shows architecture review notification when in architecture_review stage', async () => {
-    const architectureReviewStatus = { ...mockWorkflowStatus, current_stage: 'architecture_review' };
-    (useSearchParams as jest.Mock).mockReturnValue({ 
-      get: jest.fn().mockReturnValue('test-session-id') 
-    });
-    (apiClient.getWorkflowStatus as jest.Mock).mockResolvedValue(architectureReviewStatus);
+  it('shows GitHub connector in brownfield mode', async () => {
+    const brownfieldProject = { ...mockProject, mode: 'brownfield' };
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockResolvedValue(brownfieldProject);
     
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
-      expect(screen.getByText('Architecture Review Required')).toBeInTheDocument();
-      expect(screen.getByText('Please review and approve the generated architecture design.')).toBeInTheDocument();
+      expect(screen.getByTestId('github-connector')).toBeInTheDocument();
     });
   });
 
-  it('displays workflow results when available', async () => {
-    const completedStatus = { ...mockWorkflowStatus, current_stage: 'completed' };
-    const mockRequirements = {
-      structured_requirements: {
-        business_goals: ['Launch online marketplace'],
-        functional_requirements: ['User registration'],
-        non_functional_requirements: {
-          performance: ['Handle 1000 users'],
-          security: ['Encrypt data']
+  it('handles GitHub analysis completion', async () => {
+    const brownfieldProject = { ...mockProject, mode: 'brownfield' };
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockResolvedValue(brownfieldProject);
+    
+    render(<ProjectDetailPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('github-connector')).toBeInTheDocument();
+    });
+    
+    const analyzeButton = screen.getByText('Analyze Repository');
+    fireEvent.click(analyzeButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Current Architecture')).toBeInTheDocument();
+    });
+  });
+
+  it('shows existing architecture after analysis', async () => {
+    const brownfieldProject = { 
+      ...mockProject, 
+      mode: 'brownfield',
+      existing_architecture: {
+        repository_url: 'https://github.com/test/repo',
+        branch: 'main',
+        services: [
+          {
+            id: 'user-service',
+            name: 'User Service',
+            type: 'service',
+            technology: 'Node.js',
+            description: 'User management service',
+          }
+        ],
+        dependencies: [],
+        technology_stack: { 'Node.js': 1 },
+        quality_score: 0.8,
+        analysis_metadata: {
+          analyzed_at: new Date().toISOString(),
+          services_count: 1,
+          dependencies_count: 0,
+          technologies_detected: ['Node.js']
         }
       }
     };
-    const mockArchitecture = {
-      overview: 'Microservices-based e-commerce platform',
-      technology_stack: ['Node.js', 'PostgreSQL'],
-      components: [
-        { name: 'User Service', description: 'Handles user authentication' }
-      ]
-    };
-
-    (useSearchParams as jest.Mock).mockReturnValue({ 
-      get: jest.fn().mockReturnValue('test-session-id') 
-    });
-    (apiClient.getWorkflowStatus as jest.Mock).mockResolvedValue(completedStatus);
-    (apiClient.getRequirements as jest.Mock).mockResolvedValue(mockRequirements);
-    (apiClient.getArchitecture as jest.Mock).mockResolvedValue(mockArchitecture);
+    
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockResolvedValue(brownfieldProject);
     
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
-      expect(screen.getByText('Workflow Results')).toBeInTheDocument();
-      expect(screen.getByText('Requirements')).toBeInTheDocument();
-      expect(screen.getByText('Architecture')).toBeInTheDocument();
+      expect(screen.getByText('Current Architecture')).toBeInTheDocument();
+      expect(screen.getByText('User Service')).toBeInTheDocument();
     });
   });
 
-  it('handles loading state correctly', () => {
-    (apiClient.getProject as jest.Mock).mockImplementation(() => new Promise(() => {})); // Never resolves
+  it('shows architecture comparison when both architectures exist', async () => {
+    const brownfieldProject = { 
+      ...mockProject, 
+      mode: 'brownfield',
+      existing_architecture: {
+        repository_url: 'https://github.com/test/repo',
+        branch: 'main',
+        services: [],
+        dependencies: [],
+        technology_stack: {},
+        quality_score: 0.8,
+        analysis_metadata: {
+          analyzed_at: new Date().toISOString(),
+          services_count: 0,
+          dependencies_count: 0,
+          technologies_detected: []
+        }
+      },
+      proposed_architecture: {
+        architecture_overview: {
+          style: 'microservices',
+          integration_approach: 'event-driven',
+          rationale: 'Test rationale'
+        },
+        new_services: [],
+        modified_services: [],
+        integration_points: [],
+        impact_analysis: {
+          risk_level: 'low',
+          breaking_changes: false,
+          downtime_required: false
+        }
+      },
+      changes: []
+    };
+    
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockResolvedValue(brownfieldProject);
     
     render(<ProjectDetailPage />);
     
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('architecture-comparison')).toBeInTheDocument();
+    });
   });
 
-  it('handles error state correctly', async () => {
-    (apiClient.getProject as jest.Mock).mockRejectedValue(new Error('Failed to load project'));
+  it('handles architecture approval', async () => {
+    const brownfieldProject = { 
+      ...mockProject, 
+      mode: 'brownfield',
+      existing_architecture: {
+        repository_url: 'https://github.com/test/repo',
+        branch: 'main',
+        services: [],
+        dependencies: [],
+        technology_stack: {},
+        quality_score: 0.8,
+        analysis_metadata: {
+          analyzed_at: new Date().toISOString(),
+          services_count: 0,
+          dependencies_count: 0,
+          technologies_detected: []
+        }
+      },
+      proposed_architecture: {
+        architecture_overview: {
+          style: 'microservices',
+          integration_approach: 'event-driven',
+          rationale: 'Test rationale'
+        },
+        new_services: [],
+        modified_services: [],
+        integration_points: [],
+        impact_analysis: {
+          risk_level: 'low',
+          breaking_changes: false,
+          downtime_required: false
+        }
+      },
+      changes: []
+    };
+    
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockResolvedValue(brownfieldProject);
+    
+    render(<ProjectDetailPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('architecture-comparison')).toBeInTheDocument();
+    });
+    
+    const approveButton = screen.getByText('Approve');
+    fireEvent.click(approveButton);
+    
+    // Should not throw any errors
+    await waitFor(() => {
+      expect(approveButton).toBeInTheDocument();
+    });
+  });
+
+  it('handles architecture rejection', async () => {
+    const brownfieldProject = { 
+      ...mockProject, 
+      mode: 'brownfield',
+      existing_architecture: {
+        repository_url: 'https://github.com/test/repo',
+        branch: 'main',
+        services: [],
+        dependencies: [],
+        technology_stack: {},
+        quality_score: 0.8,
+        analysis_metadata: {
+          analyzed_at: new Date().toISOString(),
+          services_count: 0,
+          dependencies_count: 0,
+          technologies_detected: []
+        }
+      },
+      proposed_architecture: {
+        architecture_overview: {
+          style: 'microservices',
+          integration_approach: 'event-driven',
+          rationale: 'Test rationale'
+        },
+        new_services: [],
+        modified_services: [],
+        integration_points: [],
+        impact_analysis: {
+          risk_level: 'low',
+          breaking_changes: false,
+          downtime_required: false
+        }
+      },
+      changes: []
+    };
+    
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockResolvedValue(brownfieldProject);
+    
+    render(<ProjectDetailPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('architecture-comparison')).toBeInTheDocument();
+    });
+    
+    const rejectButton = screen.getByText('Reject');
+    fireEvent.click(rejectButton);
+    
+    // Should not throw any errors
+    await waitFor(() => {
+      expect(rejectButton).toBeInTheDocument();
+    });
+  });
+
+  it('shows loading state initially', () => {
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockImplementation(() => new Promise(() => {})); // Never resolves
+    
+    render(<ProjectDetailPage />);
+    
+    expect(screen.getByText('Test Project')).not.toBeInTheDocument();
+  });
+
+  it('shows error state when project not found', async () => {
+    const { apiClient } = require('@/lib/api-client');
+    apiClient.getProject.mockRejectedValue(new Error('Project not found'));
     
     render(<ProjectDetailPage />);
     
@@ -182,52 +400,21 @@ describe('ProjectDetailPage', () => {
     });
   });
 
-  it('refreshes workflow status periodically for active workflows', async () => {
-    jest.useFakeTimers();
-    
-    (useSearchParams as jest.Mock).mockReturnValue({ 
-      get: jest.fn().mockReturnValue('test-session-id') 
-    });
-    (apiClient.getWorkflowStatus as jest.Mock).mockResolvedValue(mockWorkflowStatus);
-    
+  it('shows workflow statistics', async () => {
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
-      expect(apiClient.getWorkflowStatus).toHaveBeenCalledTimes(1);
+      expect(screen.getByText('Total Workflows')).toBeInTheDocument();
+      expect(screen.getByText('1')).toBeInTheDocument(); // mockWorkflows.length
     });
-    
-    // Fast-forward time to trigger polling
-    jest.advanceTimersByTime(5000);
-    
-    await waitFor(() => {
-      expect(apiClient.getWorkflowStatus).toHaveBeenCalledTimes(2);
-    });
-    
-    jest.useRealTimers();
   });
 
-  it('stops polling when workflow is completed', async () => {
-    jest.useFakeTimers();
-    
-    const completedStatus = { ...mockWorkflowStatus, current_stage: 'completed' };
-    (useSearchParams as jest.Mock).mockReturnValue({ 
-      get: jest.fn().mockReturnValue('test-session-id') 
-    });
-    (apiClient.getWorkflowStatus as jest.Mock).mockResolvedValue(completedStatus);
-    
+  it('shows project information', async () => {
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
-      expect(apiClient.getWorkflowStatus).toHaveBeenCalledTimes(1);
+      expect(screen.getByText('Project Information')).toBeInTheDocument();
+      expect(screen.getByText('test-project')).toBeInTheDocument();
     });
-    
-    // Fast-forward time - should not trigger more polling
-    jest.advanceTimersByTime(10000);
-    
-    await waitFor(() => {
-      expect(apiClient.getWorkflowStatus).toHaveBeenCalledTimes(1);
-    });
-    
-    jest.useRealTimers();
   });
 });

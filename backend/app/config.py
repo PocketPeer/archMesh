@@ -85,17 +85,17 @@ class Settings(BaseSettings):
     )
     
     architecture_llm_provider: str = Field(
-        default="anthropic", description="LLM provider for architecture design"
+        default="deepseek", description="LLM provider for architecture design"
     )
     architecture_llm_model: str = Field(
-        default="claude-3-5-opus-20241022", description="LLM model for architecture design"
+        default="deepseek-r1", description="LLM model for architecture design"
     )
     
     code_generation_llm_provider: str = Field(
-        default="openai", description="LLM provider for code generation"
+        default="deepseek", description="LLM provider for code generation"
     )
     code_generation_llm_model: str = Field(
-        default="gpt-4", description="LLM model for code generation"
+        default="deepseek-r1", description="LLM model for code generation"
     )
     
     github_analysis_llm_provider: str = Field(
@@ -106,10 +106,30 @@ class Settings(BaseSettings):
     )
     
     adr_writing_llm_provider: str = Field(
-        default="anthropic", description="LLM provider for ADR writing"
+        default="deepseek", description="LLM provider for ADR writing"
     )
     adr_writing_llm_model: str = Field(
-        default="claude-3-5-sonnet-20241022", description="LLM model for ADR writing"
+        default="deepseek-r1", description="LLM model for ADR writing"
+    )
+    
+    # Knowledge Base Service Settings
+    pinecone_api_key: Optional[str] = Field(
+        default=None, description="Pinecone API key for vector search"
+    )
+    pinecone_environment: Optional[str] = Field(
+        default=None, description="Pinecone environment"
+    )
+    neo4j_uri: str = Field(
+        default="bolt://localhost:7687", description="Neo4j connection URI"
+    )
+    neo4j_user: str = Field(
+        default="neo4j", description="Neo4j username"
+    )
+    neo4j_password: str = Field(
+        default="password123", description="Neo4j password"
+    )
+    knowledge_base_embedding_model: str = Field(
+        default="all-MiniLM-L6-v2", description="Sentence transformer model for embeddings"
     )
 
     # File Processing
@@ -125,7 +145,7 @@ class Settings(BaseSettings):
     @classmethod
     def validate_environment(cls, v: str) -> str:
         """Validate environment value."""
-        allowed_envs = ["development", "staging", "production"]
+        allowed_envs = ["development", "staging", "production", "test"]
         if v not in allowed_envs:
             raise ValueError(f"Environment must be one of: {allowed_envs}")
         return v
