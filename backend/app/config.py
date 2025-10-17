@@ -70,10 +70,46 @@ class Settings(BaseSettings):
         default="deepseek-r1", description="DeepSeek model name"
     )
     default_llm_provider: str = Field(
-        default="openai", description="Default LLM provider"
+        default="deepseek", description="Default LLM provider (DeepSeek for development)"
     )
     default_llm_model: str = Field(
-        default="gpt-4", description="Default LLM model"
+        default="deepseek-r1", description="Default LLM model"
+    )
+    
+    # Task-specific LLM configurations
+    requirements_llm_provider: str = Field(
+        default="deepseek", description="LLM provider for requirements parsing"
+    )
+    requirements_llm_model: str = Field(
+        default="deepseek-r1", description="LLM model for requirements parsing"
+    )
+    
+    architecture_llm_provider: str = Field(
+        default="anthropic", description="LLM provider for architecture design"
+    )
+    architecture_llm_model: str = Field(
+        default="claude-3-5-opus-20241022", description="LLM model for architecture design"
+    )
+    
+    code_generation_llm_provider: str = Field(
+        default="openai", description="LLM provider for code generation"
+    )
+    code_generation_llm_model: str = Field(
+        default="gpt-4", description="LLM model for code generation"
+    )
+    
+    github_analysis_llm_provider: str = Field(
+        default="deepseek", description="LLM provider for GitHub analysis"
+    )
+    github_analysis_llm_model: str = Field(
+        default="deepseek-r1", description="LLM model for GitHub analysis"
+    )
+    
+    adr_writing_llm_provider: str = Field(
+        default="anthropic", description="LLM provider for ADR writing"
+    )
+    adr_writing_llm_model: str = Field(
+        default="claude-3-5-sonnet-20241022", description="LLM model for ADR writing"
     )
 
     # File Processing
@@ -126,6 +162,47 @@ class Settings(BaseSettings):
     def database_url_sync(self) -> str:
         """Get synchronous database URL for Alembic."""
         return self.database_url.replace("+asyncpg", "")
+    
+    def get_llm_config_for_task(self, task_type: str) -> tuple[str, str]:
+        """
+        Get the appropriate LLM provider and model for a specific task type.
+        
+        Args:
+            task_type: The type of task (requirements, architecture, code_generation, etc.)
+            
+        Returns:
+            Tuple of (provider, model) for the task
+            
+        Raises:
+            ValueError: If task_type is not supported
+        """
+        # In development environment, prefer DeepSeek for most tasks (free and excellent)
+        if self.is_development:
+            task_configs = {
+                "requirements": (self.requirements_llm_provider, self.requirements_llm_model),
+                "architecture": (self.architecture_llm_provider, self.architecture_llm_model),
+                "code_generation": ("deepseek", "deepseek-r1"),  # Use DeepSeek for dev
+                "github_analysis": (self.github_analysis_llm_provider, self.github_analysis_llm_model),
+                "adr_writing": (self.adr_writing_llm_provider, self.adr_writing_llm_model),
+                "development": ("deepseek", "deepseek-r1"),  # Default for dev
+                "testing": ("deepseek", "deepseek-r1"),  # Use DeepSeek for testing
+            }
+        else:
+            # In production, use the configured task-specific models
+            task_configs = {
+                "requirements": (self.requirements_llm_provider, self.requirements_llm_model),
+                "architecture": (self.architecture_llm_provider, self.architecture_llm_model),
+                "code_generation": (self.code_generation_llm_provider, self.code_generation_llm_model),
+                "github_analysis": (self.github_analysis_llm_provider, self.github_analysis_llm_model),
+                "adr_writing": (self.adr_writing_llm_provider, self.adr_writing_llm_model),
+                "development": (self.default_llm_provider, self.default_llm_model),
+                "testing": (self.default_llm_provider, self.default_llm_model),
+            }
+        
+        if task_type not in task_configs:
+            raise ValueError(f"Unsupported task type: {task_type}. Supported types: {list(task_configs.keys())}")
+        
+        return task_configs[task_type]
 
 
 # Global settings instance

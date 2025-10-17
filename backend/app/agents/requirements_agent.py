@@ -31,16 +31,19 @@ class RequirementsAgent(BaseAgent):
         """
         Initialize the Requirements Agent.
         
-        Uses Claude Sonnet for consistent and accurate requirements extraction
+        Uses DeepSeek R1 for excellent requirements parsing capabilities
         with lower temperature for more deterministic results.
         """
         from app.config import settings
         
+        # Get task-specific LLM configuration
+        provider, model = settings.get_llm_config_for_task("requirements")
+        
         super().__init__(
             agent_type="requirements_extractor",
             agent_version="1.0.0",
-            llm_provider=settings.default_llm_provider,
-            llm_model=settings.default_llm_model,
+            llm_provider=provider,
+            llm_model=model,
             temperature=0.5,  # Lower for more consistent extraction
             max_retries=3,
             timeout_seconds=120,

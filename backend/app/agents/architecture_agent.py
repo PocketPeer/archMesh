@@ -31,15 +31,19 @@ class ArchitectureAgent(BaseAgent):
         """
         Initialize the Architecture Agent.
         
-        Uses the configured LLM provider for complex architectural reasoning and design decisions.
+        Uses Claude Opus for best-in-class architecture design capabilities
+        with lower temperature for more consistent architectural decisions.
         """
         from app.config import settings
+        
+        # Get task-specific LLM configuration
+        provider, model = settings.get_llm_config_for_task("architecture")
         
         super().__init__(
             agent_type="architecture_designer",
             agent_version="1.0.0",
-            llm_provider=settings.default_llm_provider,
-            llm_model=settings.default_llm_model,
+            llm_provider=provider,
+            llm_model=model,
             temperature=0.5,  # Lower for more consistent architectural decisions
             max_retries=3,
             timeout_seconds=180,  # Longer timeout for complex architectural analysis
