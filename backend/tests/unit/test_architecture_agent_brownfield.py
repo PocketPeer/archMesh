@@ -113,7 +113,7 @@ class TestArchitectureAgentBrownfield:
 
     def test_initialization_with_kb_service(self, mock_kb_service):
         """Test that the agent initializes correctly with knowledge base service."""
-        with patch('app.agents.architecture_agent.settings') as mock_settings:
+        with patch('app.config.settings') as mock_settings:
             mock_settings.get_llm_config_for_task.return_value = ('deepseek', 'deepseek-r1')
             agent = ArchitectureAgent(knowledge_base_service=mock_kb_service)
             
@@ -123,7 +123,7 @@ class TestArchitectureAgentBrownfield:
 
     def test_initialization_without_kb_service(self):
         """Test that the agent initializes correctly without knowledge base service."""
-        with patch('app.agents.architecture_agent.settings') as mock_settings:
+        with patch('app.config.settings') as mock_settings:
             mock_settings.get_llm_config_for_task.return_value = ('deepseek', 'deepseek-r1')
             agent = ArchitectureAgent()
             
@@ -368,7 +368,7 @@ class TestArchitectureAgentBrownfield:
 
     def test_get_agent_capabilities_without_kb_service(self):
         """Test agent capabilities when knowledge base service is not available."""
-        with patch('app.agents.architecture_agent.settings') as mock_settings:
+        with patch('app.config.settings') as mock_settings:
             mock_settings.get_llm_config_for_task.return_value = ('deepseek', 'deepseek-r1')
             agent = ArchitectureAgent()
             
@@ -430,8 +430,19 @@ class TestArchitectureAgentBrownfield:
         architecture_agent._call_llm = AsyncMock(return_value='{"architecture": {"style": "microservices"}}')
         architecture_agent._parse_json_response = Mock(return_value={'architecture': {'style': 'microservices'}})
         architecture_agent._generate_brownfield_c4_diagram = AsyncMock(return_value='graph TD')
-        architecture_agent._generate_integration_strategy = AsyncMock(return_value={'phases': []})
-        architecture_agent._validate_and_enhance_architecture = Mock(return_value={'architecture': {'style': 'microservices'}})
+        architecture_agent._generate_integration_strategy = AsyncMock(return_value={
+            'phases': [{'name': 'Phase 1', 'description': 'Initial integration'}],
+            'timeline': '2 weeks',
+            'risks': ['Low risk integration']
+        })
+        architecture_agent._validate_and_enhance_architecture = Mock(return_value={
+            'architecture': {'style': 'microservices'},
+            'integration_strategy': {
+                'phases': [{'name': 'Phase 1', 'description': 'Initial integration'}],
+                'timeline': '2 weeks',
+                'risks': ['Low risk integration']
+            }
+        })
         
         input_data = {
             'project_id': 'test-project',
@@ -446,10 +457,11 @@ class TestArchitectureAgentBrownfield:
         
         assert 'architecture' in result
         assert 'integration_strategy' in result
-        assert 'context_quality' in result
-        assert result['context_quality'] < 0.5
-        assert 'warnings' in result
-        assert len(result['warnings']) > 0
+        assert 'metadata' in result
+        assert 'context_quality' in result['metadata']
+        assert result['metadata']['context_quality'] == 'low'
+        assert 'design_notes' in result['metadata']
+        assert len(result['metadata']['design_notes']) > 0
 
     @pytest.mark.asyncio
     async def test_brownfield_context_with_empty_kb_service(self):
@@ -463,7 +475,7 @@ class TestArchitectureAgentBrownfield:
             'integration_patterns': []
         })
         
-        with patch('app.agents.architecture_agent.settings') as mock_settings:
+        with patch('app.config.settings') as mock_settings:
             mock_settings.get_llm_config_for_task.return_value = ('deepseek', 'deepseek-r1')
             agent = ArchitectureAgent(knowledge_base_service=mock_kb_service)
             

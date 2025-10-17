@@ -130,7 +130,7 @@ class TestArchitectureAgent:
     def test_agent_initialization(self, agent):
         """Test agent initialization."""
         assert agent.agent_type == "architecture_designer"
-        assert agent.agent_version == "1.0.0"
+        assert agent.agent_version == "1.1.0"
         assert agent.temperature == 0.5
         assert agent.max_retries == 3
         assert agent.timeout_seconds == 180

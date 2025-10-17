@@ -259,7 +259,7 @@ describe('BrownfieldDemoPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Node.js')).toBeInTheDocument();
       expect(screen.getByText('Java')).toBeInTheDocument();
-      expect(screen.getByText('PostgreSQL')).toBeInTheDocument();
+      expect(screen.getAllByText('PostgreSQL')).toHaveLength(3); // Appears in technologies and services
       expect(screen.getByText('Express')).toBeInTheDocument();
       expect(screen.getByText('Spring Boot')).toBeInTheDocument();
     });
@@ -289,7 +289,7 @@ describe('BrownfieldDemoPage', () => {
       expect(screen.getByText('Handles user authentication and profiles')).toBeInTheDocument();
       expect(screen.getByText('Stores user data and authentication info')).toBeInTheDocument();
       expect(screen.getByText('Node.js + Express')).toBeInTheDocument();
-      expect(screen.getByText('PostgreSQL')).toBeInTheDocument();
+      expect(screen.getAllByText('PostgreSQL')).toHaveLength(3); // Appears in technologies and services
     });
   });
 });

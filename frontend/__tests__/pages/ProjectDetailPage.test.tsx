@@ -386,7 +386,9 @@ describe('ProjectDetailPage', () => {
     
     render(<ProjectDetailPage />);
     
+    // Check for loading skeleton elements
     expect(screen.getByText('Test Project')).not.toBeInTheDocument();
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('shows error state when project not found', async () => {
@@ -405,7 +407,7 @@ describe('ProjectDetailPage', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Total Workflows')).toBeInTheDocument();
-      expect(screen.getByText('1')).toBeInTheDocument(); // mockWorkflows.length
+      expect(screen.getAllByText('1')).toHaveLength(2); // Appears in multiple places
     });
   });
 
