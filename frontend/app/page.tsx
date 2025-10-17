@@ -32,7 +32,7 @@ export default function HomePage() {
 
   const loadProjects = async () => {
     try {
-      const response = await apiClient.listProjects(0, 6); // Get first 6 projects
+      const response = await apiClient.getProjects(0, 6); // Get first 6 projects
       setProjects(response.items || []);
     } catch (error) {
       console.error('Failed to load projects:', error);

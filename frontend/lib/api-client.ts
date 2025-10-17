@@ -59,11 +59,12 @@ class ApiClient {
   }
 
   async listProjects(): Promise<Project[]> {
-    const response = await fetch(`${this.baseUrl}/projects`);
+    const response = await fetch(`${this.baseUrl}/projects/`);
     if (!response.ok) {
       throw new Error(`Failed to fetch projects: ${response.statusText}`);
     }
-    return response.json();
+    const data = await response.json();
+    return data.projects || [];
   }
 
   async createProject(project: Partial<Project>): Promise<Project> {
@@ -169,7 +170,8 @@ class ApiClient {
     if (!response.ok) {
       throw new Error(`Failed to fetch projects: ${response.statusText}`);
     }
-    return response.json();
+    const data = await response.json();
+    return { items: data.projects || [] };
   }
 
   async startArchitectureWorkflow(file: File, projectId: string, domain: string): Promise<{ session_id: string }> {
@@ -232,4 +234,4 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient('http://localhost:8000/api/v1');
