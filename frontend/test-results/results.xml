@@ -1,0 +1,1078 @@
+<testsuites id="" name="" tests="25" failures="20" skipped="0" errors="0" time="53.350925000000004">
+<testsuite name="real-functionality.test.ts" timestamp="2025-10-21T15:30:00.331Z" hostname="chromium" tests="5" failures="4" skipped="0" time="37.266" errors="0">
+<testcase name="Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution" classname="real-functionality.test.ts" time="8.469">
+<failure message="real-functionality.test.ts:84:7 Complete User Journey: Registration to Workflow Execution" type="FAILURE">
+<![CDATA[  [chromium] › real-functionality.test.ts:84:7 › Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution 
+
+    TimeoutError: page.fill: Timeout 1666.6666666666667ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+       at test-utils.ts:96
+
+      94 |   for (let attempt = 0; attempt < retries; attempt++) {
+      95 |     try {
+    > 96 |       await page.fill(selector, value, { timeout: timeout / retries });
+         |                  ^
+      97 |       return;
+      98 |     } catch (error) {
+      99 |       if (attempt === retries - 1) throw error;
+        at fillFormField (/Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/test-utils.ts:96:18)
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:96:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 108ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 504ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 138ms
+Form fill attempt 1 failed, retrying...
+[log] Attempting to reconnect (0/5)
+Form fill attempt 2 failed, retrying...
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Workflow History and Error Handling" classname="real-functionality.test.ts" time="12.065">
+<failure message="real-functionality.test.ts:218:7 Workflow History and Error Handling" type="FAILURE">
+<![CDATA[  [chromium] › real-functionality.test.ts:218:7 › Real Functionality E2E Tests › Workflow History and Error Handling 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      224 |     
+      225 |     // Create a project for testing
+    > 226 |     await page.click('text=Create New Project');
+          |                ^
+      227 |     await page.fill('input[name="name"]', `Error Test Project ${Date.now()}`);
+      228 |     await page.fill('textarea[name="description"]', 'Testing error handling');
+      229 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:226:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 108ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 504ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 138ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 168ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › AI Chat Integration" classname="real-functionality.test.ts" time="1.909">
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 110ms
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Real-time Updates and Notifications" classname="real-functionality.test.ts" time="12.083">
+<failure message="real-functionality.test.ts:281:7 Real-time Updates and Notifications" type="FAILURE">
+<![CDATA[  [chromium] › real-functionality.test.ts:281:7 › Real Functionality E2E Tests › Real-time Updates and Notifications 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      286 |     
+      287 |     // Create a project
+    > 288 |     await page.click('text=Create New Project');
+          |                ^
+      289 |     await page.fill('input[name="name"]', `Real-time Test ${Date.now()}`);
+      290 |     await page.fill('textarea[name="description"]', 'Testing real-time updates');
+      291 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:288:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 109ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 504ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 138ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 168ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Performance and Responsiveness" classname="real-functionality.test.ts" time="2.74">
+<failure message="real-functionality.test.ts:319:7 Performance and Responsiveness" type="FAILURE">
+<![CDATA[  [chromium] › real-functionality.test.ts:319:7 › Real Functionality E2E Tests › Performance and Responsiveness 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('h1')
+    Expected: visible
+    Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-xl font-bold text-slate-900">ArchMesh</h1> aka getByRole('link', { name: 'ArchMesh' })
+        2) <h1 class="text-5xl font-bold text-slate-900">ArchMesh PoC</h1> aka getByRole('heading', { name: 'ArchMesh PoC' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+      334 |     
+      335 |     // Should still be functional on mobile
+    > 336 |     await expect(page.locator('h1')).toBeVisible();
+          |                                      ^
+      337 |     
+      338 |     // Test desktop view
+      339 |     await page.setViewportSize({ width: 1920, height: 1080 });
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:336:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 108ms
+[log] [Fast Refresh] rebuilding
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="real-functionality.test.ts" timestamp="2025-10-21T15:30:00.331Z" hostname="firefox" tests="5" failures="4" skipped="0" time="40.673" errors="0">
+<testcase name="Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution" classname="real-functionality.test.ts" time="8.374">
+<failure message="real-functionality.test.ts:84:7 Complete User Journey: Registration to Workflow Execution" type="FAILURE">
+<![CDATA[  [firefox] › real-functionality.test.ts:84:7 › Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution 
+
+    TimeoutError: page.fill: Timeout 1666.6666666666667ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+       at test-utils.ts:96
+
+      94 |   for (let attempt = 0; attempt < retries; attempt++) {
+      95 |     try {
+    > 96 |       await page.fill(selector, value, { timeout: timeout / retries });
+         |                  ^
+      97 |       return;
+      98 |     } catch (error) {
+      99 |       if (attempt === retries - 1) throw error;
+        at fillFormField (/Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/test-utils.ts:96:18)
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:96:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+[error] [JavaScript Error: "Firefox can’t establish a connection to the server at ws://localhost:8000/ws." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket connected
+[error] [JavaScript Error: "The connection to ws://localhost:8000/ws was interrupted while the page was loading." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket disconnected: 1006 
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 166ms
+Form fill attempt 1 failed, retrying...
+[log] Attempting to reconnect (1/5)
+Form fill attempt 2 failed, retrying...
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 214ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Workflow History and Error Handling" classname="real-functionality.test.ts" time="12.747">
+<failure message="real-functionality.test.ts:218:7 Workflow History and Error Handling" type="FAILURE">
+<![CDATA[  [firefox] › real-functionality.test.ts:218:7 › Real Functionality E2E Tests › Workflow History and Error Handling 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      224 |     
+      225 |     // Create a project for testing
+    > 226 |     await page.click('text=Create New Project');
+          |                ^
+      227 |     await page.fill('input[name="name"]', `Error Test Project ${Date.now()}`);
+      228 |     await page.fill('textarea[name="description"]', 'Testing error handling');
+      229 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:226:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+[error] [JavaScript Error: "Firefox can’t establish a connection to the server at ws://localhost:8000/ws." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[error] [JavaScript Error: "The connection to ws://localhost:8000/ws was interrupted while the page was loading." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 166ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 214ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 155ms
+[warning] [JavaScript Warning: "The resource at “http://localhost:3000/_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2” preloaded with link preload was not used within a few seconds. Make sure all attributes of the preload tag are set correctly." {file: "http://localhost:3000/login" line: 0}]
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 169ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 212ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › AI Chat Integration" classname="real-functionality.test.ts" time="2.016">
+<system-out>
+<![CDATA[[info] Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+[error] [JavaScript Error: "Firefox can’t establish a connection to the server at ws://localhost:8000/ws." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[error] [JavaScript Error: "The connection to ws://localhost:8000/ws was interrupted while the page was loading." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 220ms
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Real-time Updates and Notifications" classname="real-functionality.test.ts" time="13.098">
+<failure message="real-functionality.test.ts:281:7 Real-time Updates and Notifications" type="FAILURE">
+<![CDATA[  [firefox] › real-functionality.test.ts:281:7 › Real Functionality E2E Tests › Real-time Updates and Notifications 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      286 |     
+      287 |     // Create a project
+    > 288 |     await page.click('text=Create New Project');
+          |                ^
+      289 |     await page.fill('input[name="name"]', `Real-time Test ${Date.now()}`);
+      290 |     await page.fill('textarea[name="description"]', 'Testing real-time updates');
+      291 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:288:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+[error] [JavaScript Error: "Firefox can’t establish a connection to the server at ws://localhost:8000/ws." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[error] [JavaScript Error: "The connection to ws://localhost:8000/ws was interrupted while the page was loading." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 210ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 143ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 328ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 291ms
+[warning] [JavaScript Warning: "The resource at “http://localhost:3000/_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2” preloaded with link preload was not used within a few seconds. Make sure all attributes of the preload tag are set correctly." {file: "http://localhost:3000/login" line: 0}]
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Performance and Responsiveness" classname="real-functionality.test.ts" time="4.438">
+<failure message="real-functionality.test.ts:319:7 Performance and Responsiveness" type="FAILURE">
+<![CDATA[  [firefox] › real-functionality.test.ts:319:7 › Real Functionality E2E Tests › Performance and Responsiveness 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('h1')
+    Expected: visible
+    Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-xl font-bold text-slate-900">ArchMesh</h1> aka getByRole('link', { name: 'ArchMesh' })
+        2) <h1 class="text-5xl font-bold text-slate-900">ArchMesh PoC</h1> aka getByRole('heading', { name: 'ArchMesh PoC' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+      334 |     
+      335 |     // Should still be functional on mobile
+    > 336 |     await expect(page.locator('h1')).toBeVisible();
+          |                                      ^
+      337 |     
+      338 |     // Test desktop view
+      339 |     await page.setViewportSize({ width: 1920, height: 1080 });
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:336:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+[error] [JavaScript Error: "Firefox can’t establish a connection to the server at ws://localhost:8000/ws." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket connected
+[error] [JavaScript Error: "The connection to ws://localhost:8000/ws was interrupted while the page was loading." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket disconnected: 1006 
+[info] Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+[error] [JavaScript Error: "Firefox can’t establish a connection to the server at ws://localhost:8000/ws." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[error] [JavaScript Error: "The connection to ws://localhost:8000/ws was interrupted while the page was loading." {file: "http://localhost:3000/_next/static/chunks/_a8c94d00._.js" line: 1760}]
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 210ms
+[error] [JavaScript Error: "Error: Error: strict mode violation: locator('h1') resolved to 2 elements:
+    1) <h1 class="text-xl font-bold text-slate-900">ArchMesh</h1> aka getByRole('link', { name: 'ArchMesh' })
+    2) <h1 class="text-5xl font-bold text-slate-900">ArchMesh PoC</h1> aka getByRole('heading', { name: 'ArchMesh PoC' })
+" {file: "debugger eval code" line: 7437}]
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="real-functionality.test.ts" timestamp="2025-10-21T15:30:00.331Z" hostname="webkit" tests="5" failures="4" skipped="0" time="37.739" errors="0">
+<testcase name="Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution" classname="real-functionality.test.ts" time="9.685">
+<failure message="real-functionality.test.ts:84:7 Complete User Journey: Registration to Workflow Execution" type="FAILURE">
+<![CDATA[  [webkit] › real-functionality.test.ts:84:7 › Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution 
+
+    TimeoutError: page.fill: Timeout 1666.6666666666667ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+       at test-utils.ts:96
+
+      94 |   for (let attempt = 0; attempt < retries; attempt++) {
+      95 |     try {
+    > 96 |       await page.fill(selector, value, { timeout: timeout / retries });
+         |                  ^
+      97 |       return;
+      98 |     } catch (error) {
+      99 |       if (attempt === retries - 1) throw error;
+        at fillFormField (/Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/test-utils.ts:96:18)
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:96:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 211ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 143ms
+Form fill attempt 1 failed, retrying...
+[log] Attempting to reconnect (0/5)
+Form fill attempt 2 failed, retrying...
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 325ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Workflow History and Error Handling" classname="real-functionality.test.ts" time="12.508">
+<failure message="real-functionality.test.ts:218:7 Workflow History and Error Handling" type="FAILURE">
+<![CDATA[  [webkit] › real-functionality.test.ts:218:7 › Real Functionality E2E Tests › Workflow History and Error Handling 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      224 |     
+      225 |     // Create a project for testing
+    > 226 |     await page.click('text=Create New Project');
+          |                ^
+      227 |     await page.fill('input[name="name"]', `Error Test Project ${Date.now()}`);
+      228 |     await page.fill('textarea[name="description"]', 'Testing error handling');
+      229 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:226:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 212ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 143ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 324ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 291ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 231ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › AI Chat Integration" classname="real-functionality.test.ts" time="1.61">
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Real-time Updates and Notifications" classname="real-functionality.test.ts" time="11.69">
+<failure message="real-functionality.test.ts:281:7 Real-time Updates and Notifications" type="FAILURE">
+<![CDATA[  [webkit] › real-functionality.test.ts:281:7 › Real Functionality E2E Tests › Real-time Updates and Notifications 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      286 |     
+      287 |     // Create a project
+    > 288 |     await page.click('text=Create New Project');
+          |                ^
+      289 |     await page.fill('input[name="name"]', `Real-time Test ${Date.now()}`);
+      290 |     await page.fill('textarea[name="description"]', 'Testing real-time updates');
+      291 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:288:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 324ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 291ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 231ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 211ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Performance and Responsiveness" classname="real-functionality.test.ts" time="2.246">
+<failure message="real-functionality.test.ts:319:7 Performance and Responsiveness" type="FAILURE">
+<![CDATA[  [webkit] › real-functionality.test.ts:319:7 › Real Functionality E2E Tests › Performance and Responsiveness 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('h1')
+    Expected: visible
+    Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-xl font-bold text-slate-900">ArchMesh</h1> aka getByRole('link', { name: 'ArchMesh' })
+        2) <h1 class="text-5xl font-bold text-slate-900">ArchMesh PoC</h1> aka getByRole('heading', { name: 'ArchMesh PoC' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+      334 |     
+      335 |     // Should still be functional on mobile
+    > 336 |     await expect(page.locator('h1')).toBeVisible();
+          |                                      ^
+      337 |     
+      338 |     // Test desktop view
+      339 |     await page.setViewportSize({ width: 1920, height: 1080 });
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:336:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="real-functionality.test.ts" timestamp="2025-10-21T15:30:00.331Z" hostname="Mobile Chrome" tests="5" failures="4" skipped="0" time="38.537" errors="0">
+<testcase name="Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution" classname="real-functionality.test.ts" time="12.5">
+<failure message="real-functionality.test.ts:84:7 Complete User Journey: Registration to Workflow Execution" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › real-functionality.test.ts:84:7 › Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution 
+
+    TimeoutError: page.click: Timeout 3333.3333333333335ms exceeded.
+    Call log:
+      - waiting for locator('text=Sign Up')
+        - locator resolved to <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-fore…>Sign up</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting 100ms
+        6 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting 500ms
+
+
+       at test-utils.ts:118
+
+      116 |   for (let attempt = 0; attempt < retries; attempt++) {
+      117 |     try {
+    > 118 |       await page.click(selector, { timeout: timeout / retries });
+          |                  ^
+      119 |       return;
+      120 |     } catch (error) {
+      121 |       if (attempt === retries - 1) throw error;
+        at clickElement (/Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/test-utils.ts:118:18)
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:93:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 232ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 211ms
+Click attempt 1 failed, retrying...
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 105ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 166ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 221ms
+Click attempt 2 failed, retrying...
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 180ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Workflow History and Error Handling" classname="real-functionality.test.ts" time="11.206">
+<failure message="real-functionality.test.ts:218:7 Workflow History and Error Handling" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › real-functionality.test.ts:218:7 › Real Functionality E2E Tests › Workflow History and Error Handling 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      224 |     
+      225 |     // Create a project for testing
+    > 226 |     await page.click('text=Create New Project');
+          |                ^
+      227 |     await page.fill('input[name="name"]', `Error Test Project ${Date.now()}`);
+      228 |     await page.fill('textarea[name="description"]', 'Testing error handling');
+      229 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:226:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 232ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 211ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 106ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 167ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 221ms
+[log] [Fast Refresh] rebuilding
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › AI Chat Integration" classname="real-functionality.test.ts" time="1.215">
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Real-time Updates and Notifications" classname="real-functionality.test.ts" time="11.508">
+<failure message="real-functionality.test.ts:281:7 Real-time Updates and Notifications" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › real-functionality.test.ts:281:7 › Real Functionality E2E Tests › Real-time Updates and Notifications 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      286 |     
+      287 |     // Create a project
+    > 288 |     await page.click('text=Create New Project');
+          |                ^
+      289 |     await page.fill('input[name="name"]', `Real-time Test ${Date.now()}`);
+      290 |     await page.fill('textarea[name="description"]', 'Testing real-time updates');
+      291 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:288:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 108ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 168ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 221ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 178ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 187ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 167ms
+[log] [Fast Refresh] rebuilding
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Performance and Responsiveness" classname="real-functionality.test.ts" time="2.108">
+<failure message="real-functionality.test.ts:319:7 Performance and Responsiveness" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › real-functionality.test.ts:319:7 › Real Functionality E2E Tests › Performance and Responsiveness 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('h1')
+    Expected: visible
+    Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-xl font-bold text-slate-900">ArchMesh</h1> aka getByRole('link', { name: 'ArchMesh' })
+        2) <h1 class="text-5xl font-bold text-slate-900">ArchMesh PoC</h1> aka getByRole('heading', { name: 'ArchMesh PoC' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+      334 |     
+      335 |     // Should still be functional on mobile
+    > 336 |     await expect(page.locator('h1')).toBeVisible();
+          |                                      ^
+      337 |     
+      338 |     // Test desktop view
+      339 |     await page.setViewportSize({ width: 1920, height: 1080 });
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:336:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 109ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 169ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="real-functionality.test.ts" timestamp="2025-10-21T15:30:00.331Z" hostname="Mobile Safari" tests="5" failures="4" skipped="0" time="42.188" errors="0">
+<testcase name="Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution" classname="real-functionality.test.ts" time="12.556">
+<failure message="real-functionality.test.ts:84:7 Complete User Journey: Registration to Workflow Execution" type="FAILURE">
+<![CDATA[  [Mobile Safari] › real-functionality.test.ts:84:7 › Real Functionality E2E Tests › Complete User Journey: Registration to Workflow Execution 
+
+    TimeoutError: page.click: Timeout 3333.3333333333335ms exceeded.
+    Call log:
+      - waiting for locator('text=Sign Up')
+        - locator resolved to <button data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-fore…>Sign up</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting 100ms
+        6 × waiting for element to be visible, enabled and stable
+          - element is not visible
+        - retrying click action
+          - waiting 500ms
+
+
+       at test-utils.ts:118
+
+      116 |   for (let attempt = 0; attempt < retries; attempt++) {
+      117 |     try {
+    > 118 |       await page.click(selector, { timeout: timeout / retries });
+          |                  ^
+      119 |       return;
+      120 |     } catch (error) {
+      121 |       if (attempt === retries - 1) throw error;
+        at clickElement (/Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/test-utils.ts:118:18)
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:93:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 177ms
+Click attempt 1 failed, retrying...
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 186ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 168ms
+Click attempt 2 failed, retrying...
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 357ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 181ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 131ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-8bb50-ation-to-Workflow-Execution-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Workflow History and Error Handling" classname="real-functionality.test.ts" time="11.5">
+<failure message="real-functionality.test.ts:218:7 Workflow History and Error Handling" type="FAILURE">
+<![CDATA[  [Mobile Safari] › real-functionality.test.ts:218:7 › Real Functionality E2E Tests › Workflow History and Error Handling 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      224 |     
+      225 |     // Create a project for testing
+    > 226 |     await page.click('text=Create New Project');
+          |                ^
+      227 |     await page.fill('input[name="name"]', `Error Test Project ${Date.now()}`);
+      228 |     await page.fill('textarea[name="description"]', 'Testing error handling');
+      229 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:226:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 176ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 187ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 167ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 359ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 181ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-6e164--History-and-Error-Handling-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › AI Chat Integration" classname="real-functionality.test.ts" time="2.204">
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 167ms
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Real-time Updates and Notifications" classname="real-functionality.test.ts" time="13.099">
+<failure message="real-functionality.test.ts:281:7 Real-time Updates and Notifications" type="FAILURE">
+<![CDATA[  [Mobile Safari] › real-functionality.test.ts:281:7 › Real Functionality E2E Tests › Real-time Updates and Notifications 
+
+    TimeoutError: page.click: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('text=Create New Project')
+
+
+      286 |     
+      287 |     // Create a project
+    > 288 |     await page.click('text=Create New Project');
+          |                ^
+      289 |     await page.fill('input[name="name"]', `Real-time Test ${Date.now()}`);
+      290 |     await page.fill('textarea[name="description"]', 'Testing real-time updates');
+      291 |     await page.selectOption('select[name="domain"]', 'cloud-native');
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:288:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 165ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 357ms
+[log] Attempting to reconnect (0/5)
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 182ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 131ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 154ms
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-e7d88-e-Updates-and-Notifications-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Real Functionality E2E Tests › Performance and Responsiveness" classname="real-functionality.test.ts" time="2.829">
+<failure message="real-functionality.test.ts:319:7 Performance and Responsiveness" type="FAILURE">
+<![CDATA[  [Mobile Safari] › real-functionality.test.ts:319:7 › Real Functionality E2E Tests › Performance and Responsiveness 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('h1')
+    Expected: visible
+    Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-xl font-bold text-slate-900">ArchMesh</h1> aka getByRole('link', { name: 'ArchMesh' })
+        2) <h1 class="text-5xl font-bold text-slate-900">ArchMesh PoC</h1> aka getByRole('heading', { name: 'ArchMesh PoC' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+      334 |     
+      335 |     // Should still be functional on mobile
+    > 336 |     await expect(page.locator('h1')).toBeVisible();
+          |                                      ^
+      337 |     
+      338 |     // Test desktop view
+      339 |     await page.setViewportSize({ width: 1920, height: 1080 });
+        at /Users/schwipee/dev/archMesh/archmesh-poc/frontend/__tests__/e2e/real-functionality.test.ts:336:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 358ms
+[error] WebSocket connection to 'ws://localhost:8000/ws' failed: WebSocket is closed before the connection is established.
+[log] WebSocket disconnected: 1006 
+[log] WebSocket connected
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|real-functionality-Real-Fu-f2438-formance-and-Responsiveness-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

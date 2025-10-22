@@ -5,7 +5,72 @@
  * with detailed change tracking and impact analysis.
  */
 
-import { Service, Dependency, ArchitectureGraph } from './architecture';
+// Define interfaces locally to avoid import issues
+export interface Position {
+  x: number;
+  y: number;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  type: 'service' | 'database' | 'queue' | 'gateway' | 'cache' | 'monitoring' | 'api' | 'frontend' | 'backend';
+  technology: string;
+  status: 'healthy' | 'warning' | 'critical' | 'unknown';
+  description?: string;
+  version?: string;
+  owner?: string;
+  team?: string;
+  environment?: string;
+  children?: Service[];  // For drill-down functionality
+  position: Position;
+  metadata?: {
+    endpoints?: string[];
+    dependencies?: string[];
+    healthCheck?: string;
+    documentation?: string;
+    repository?: string;
+    lastDeployed?: string;
+    uptime?: number;
+    responseTime?: number;
+    errorRate?: number;
+    changeType?: string;
+    change?: any;
+  };
+}
+
+export interface Dependency {
+  id: string;
+  source: string;  // service id
+  target: string;  // service id
+  type: 'api' | 'event' | 'data' | 'message' | 'sync' | 'async';
+  protocol?: string;
+  description?: string;
+  frequency?: 'high' | 'medium' | 'low';
+  criticality?: 'critical' | 'important' | 'normal';
+  metadata?: {
+    endpoint?: string;
+    method?: string;
+    payload?: string;
+    responseTime?: number;
+    errorRate?: number;
+    lastUsed?: string;
+    changeType?: string;
+    change?: any;
+  };
+}
+
+export interface ArchitectureGraph {
+  services: Service[];
+  dependencies: Dependency[];
+  metadata?: {
+    lastUpdated?: string;
+    version?: string;
+    totalServices?: number;
+    totalDependencies?: number;
+    architectureStyle?: string;
+  };
+}
 
 export type ChangeType = 'add' | 'modify' | 'remove' | 'deprecate';
 export type EntityType = 'service' | 'component' | 'dependency' | 'interface' | 'data_model';
@@ -154,7 +219,7 @@ export interface ComparisonViewProps {
 export interface ChangesPanelProps {
   changes: ArchitectureChange[];
   impactAnalysis: ImpactAnalysis;
-  onChangeClick: (change: ArchitectureChange) => void;
+  onChangeClick: (changeId: string) => void;
   onFilterChange: (filter: ChangeFilter) => void;
   selectedChangeId?: string;
   className?: string;

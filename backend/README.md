@@ -1,3 +1,22 @@
+## LLM configuration
+
+Set provider via environment (development falls back to DeepSeek if unset):
+
+```
+# .env
+DEFAULT_LLM_PROVIDER=openai   # or anthropic or deepseek
+DEFAULT_LLM_MODEL=gpt-4o-mini # e.g. gpt-4o, claude-3-5-sonnet, deepseek-r1
+OPENAI_API_KEY=sk-...
+# Optional if using Anthropic
+ANTHROPIC_API_KEY=... 
+
+# DeepSeek local (optional)
+DEEPSEEK_BASE_URL=http://localhost:11434
+DEEPSEEK_MODEL=deepseek-r1
+```
+
+The AI Chat endpoints will use the configured provider and include session history and supplied context in prompts.
+
 # ArchMesh PoC Backend
 
 AI-powered architecture document analysis and processing backend built with FastAPI.

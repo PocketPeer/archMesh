@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Architecture Comparison Component.
  * 

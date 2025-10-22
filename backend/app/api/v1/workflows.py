@@ -263,6 +263,64 @@ async def get_workflow_status(
         )
 
 
+@router.get("/{session_id}", response_model=Dict[str, Any])
+async def get_workflow(
+    session_id: str,
+    db: AsyncSession = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Get full workflow session details.
+    
+    Args:
+        session_id: Workflow session UUID
+        db: Database session
+        
+    Returns:
+        Complete workflow session data
+        
+    Raises:
+        HTTPException: 404 if workflow not found, 500 if database error
+    """
+    try:
+        # Get workflow session with related data
+        result = await db.execute(
+            select(WorkflowSession)
+            .options(selectinload(WorkflowSession.agent_executions))
+            .where(WorkflowSession.id == session_id)
+        )
+        db_workflow = result.scalar_one_or_none()
+        
+        if not db_workflow:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Workflow session {session_id} not found"
+            )
+        
+        # Convert to dictionary for JSON response
+        workflow_data = {
+            "session_id": str(db_workflow.id),
+            "project_id": str(db_workflow.project_id),
+            "workflow_type": "architecture",  # Default workflow type
+            "current_stage": db_workflow.current_stage,
+            "is_active": db_workflow.is_active,
+            "started_at": db_workflow.started_at.isoformat() if db_workflow.started_at else None,
+            "completed_at": db_workflow.completed_at.isoformat() if db_workflow.completed_at else None,
+            "last_activity": db_workflow.last_activity.isoformat() if db_workflow.last_activity else None,
+            "state_data": db_workflow.state_data or {}
+        }
+        
+        return workflow_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get workflow {session_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get workflow: {str(e)}"
+        )
+
+
 @router.put("/{session_id}", response_model=WorkflowStatusResponse)
 async def update_workflow(
     session_id: UUID,
@@ -489,7 +547,7 @@ async def execute_agent(
 async def list_workflows(
     skip: int = Query(0, ge=0, description="Number of workflows to skip"),
     limit: int = Query(100, ge=1, le=100, description="Number of workflows to return"),
-    project_id: Optional[UUID] = Query(None, description="Filter by project ID"),
+    project_id: Optional[str] = Query(None, description="Filter by project ID (UUID)") ,
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     stage: Optional[WorkflowStageEnum] = Query(None, description="Filter by current stage"),
     db: AsyncSession = Depends(get_db)
@@ -520,7 +578,13 @@ async def list_workflows(
         filters = []
         
         if project_id:
-            filters.append(WorkflowSession.project_id == project_id)
+            # Accept only valid UUIDs; ignore non-UUID placeholders (e.g., demo IDs)
+            try:
+                valid_uuid = UUID(project_id)
+                filters.append(WorkflowSession.project_id == valid_uuid)
+            except Exception:
+                # Skip filter if not a valid UUID
+                pass
         
         if is_active is not None:
             filters.append(WorkflowSession.is_active == is_active)

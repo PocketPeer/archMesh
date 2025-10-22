@@ -69,6 +69,14 @@ class Settings(BaseSettings):
     deepseek_model: str = Field(
         default="deepseek-r1", description="DeepSeek model name"
     )
+    
+    # Ollama Configuration
+    ollama_base_url: str = Field(
+        default="http://localhost:11434", description="Ollama server URL"
+    )
+    ollama_model: str = Field(
+        default="llama3.2:3b", description="Ollama model name"
+    )
     default_llm_provider: str = Field(
         default="deepseek", description="Default LLM provider (DeepSeek for development)"
     )
@@ -78,17 +86,17 @@ class Settings(BaseSettings):
     
     # Task-specific LLM configurations
     requirements_llm_provider: str = Field(
-        default="deepseek", description="LLM provider for requirements parsing"
+        default="ollama", description="LLM provider for requirements parsing"
     )
     requirements_llm_model: str = Field(
-        default="deepseek-r1", description="LLM model for requirements parsing"
+        default="llama3.2:3b", description="LLM model for requirements parsing"
     )
     
     architecture_llm_provider: str = Field(
-        default="deepseek", description="LLM provider for architecture design"
+        default="ollama", description="LLM provider for architecture design"
     )
     architecture_llm_model: str = Field(
-        default="deepseek-r1", description="LLM model for architecture design"
+        default="llama3.2:3b", description="LLM model for architecture design"
     )
     
     code_generation_llm_provider: str = Field(
@@ -163,7 +171,7 @@ class Settings(BaseSettings):
     @classmethod
     def validate_llm_provider(cls, v: str) -> str:
         """Validate LLM provider."""
-        allowed_providers = ["openai", "anthropic", "deepseek"]
+        allowed_providers = ["openai", "anthropic", "deepseek", "ollama"]
         if v not in allowed_providers:
             raise ValueError(f"LLM provider must be one of: {allowed_providers}")
         return v
@@ -196,16 +204,16 @@ class Settings(BaseSettings):
         Raises:
             ValueError: If task_type is not supported
         """
-        # In development environment, prefer DeepSeek for most tasks (free and excellent)
+        # In development environment, prefer Ollama for stability, DeepSeek as fallback
         if self.is_development:
             task_configs = {
-                "requirements": (self.requirements_llm_provider, self.requirements_llm_model),
-                "architecture": (self.architecture_llm_provider, self.architecture_llm_model),
-                "code_generation": ("deepseek", "deepseek-r1"),  # Use DeepSeek for dev
-                "github_analysis": (self.github_analysis_llm_provider, self.github_analysis_llm_model),
-                "adr_writing": (self.adr_writing_llm_provider, self.adr_writing_llm_model),
-                "development": ("deepseek", "deepseek-r1"),  # Default for dev
-                "testing": ("deepseek", "deepseek-r1"),  # Use DeepSeek for testing
+                "requirements": ("ollama", self.ollama_model),  # Use Ollama for stability
+                "architecture": ("ollama", self.ollama_model),  # Use Ollama for stability
+                "code_generation": ("ollama", self.ollama_model),  # Use Ollama for dev
+                "github_analysis": ("ollama", self.ollama_model),  # Use Ollama for stability
+                "adr_writing": ("ollama", self.ollama_model),  # Use Ollama for stability
+                "development": ("ollama", self.ollama_model),  # Default to Ollama for dev
+                "testing": ("ollama", self.ollama_model),  # Use Ollama for testing
             }
         else:
             # In production, use the configured task-specific models

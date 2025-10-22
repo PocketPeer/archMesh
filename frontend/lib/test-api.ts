@@ -4,7 +4,7 @@ import { apiClient } from './api-client';
 export async function testApiConnection() {
   try {
     console.log('Testing API connection...');
-    const health = await apiClient.healthCheck();
+    const health = await apiClient.getHealth();
     console.log('✅ API Health Check:', health);
     return true;
   } catch (error) {

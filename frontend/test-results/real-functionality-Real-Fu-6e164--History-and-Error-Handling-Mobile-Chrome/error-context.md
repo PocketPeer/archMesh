@@ -1,0 +1,57 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "ArchMesh" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - heading "ArchMesh" [level=1] [ref=e8]
+        - button [ref=e10]:
+          - img
+    - main [ref=e11]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - heading "ArchMesh" [level=1] [ref=e15]
+          - paragraph [ref=e16]: AI-powered architecture design platform
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - generic [ref=e19]: Sign in to your account
+            - generic [ref=e20]: Enter your email and password to access your projects
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - generic [ref=e23]:
+                - text: Email address
+                - textbox "Email address" [ref=e24]:
+                  - /placeholder: Enter your email
+              - generic [ref=e25]:
+                - text: Password
+                - generic [ref=e26]:
+                  - textbox "Password" [ref=e27]:
+                    - /placeholder: Enter your password
+                  - button [ref=e28]:
+                    - img
+              - link "Forgot your password?" [ref=e30] [cursor=pointer]:
+                - /url: /forgot-password
+              - button "Sign in" [ref=e31]
+            - paragraph [ref=e33]:
+              - text: Don't have an account?
+              - link "Sign up" [ref=e34] [cursor=pointer]:
+                - /url: /register
+  - generic [ref=e38]:
+    - generic [ref=e39]:
+      - img [ref=e40]
+      - text: AI Assistant
+      - img [ref=e42]
+    - generic [ref=e44]:
+      - button "DeepSeek R1" [ref=e45]:
+        - text: DeepSeek R1
+        - img
+      - button "+" [ref=e46]
+      - button "×" [ref=e47]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e53] [cursor=pointer]:
+    - img [ref=e54]
+  - alert [ref=e57]
+```

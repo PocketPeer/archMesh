@@ -39,84 +39,68 @@ class TestRequirementsAgent:
     @pytest.mark.asyncio
     async def test_execute_success(self, agent, sample_requirements_data):
         """Test successful requirements extraction."""
-        # Mock the LLM response
-        mock_response = MagicMock()
-        mock_response.content = str(sample_requirements_data)
+        import json
         
-        with patch.object(agent, '_call_llm', return_value=str(sample_requirements_data)):
-            with patch('builtins.open', MagicMock()):
-                with patch('os.path.exists', return_value=True):
-                    result = await agent.execute({
-                        "document_path": "/test/path/document.txt",
-                        "project_context": "Test context",
-                        "domain": "cloud-native"
-                    })
-                    
-                    assert result["success"] is True
-                    assert "requirements" in result
-                    assert result["requirements"]["structured_requirements"]["business_goals"] == ["Launch online marketplace", "Increase revenue"]
+        # Mock the document reading and LLM response
+        with patch.object(agent, '_read_document', return_value="Test document content"):
+            with patch.object(agent, '_call_llm', return_value=json.dumps(sample_requirements_data)):
+                result = await agent.execute({
+                    "document_path": "/test/path/document.txt",
+                    "project_context": "Test context",
+                    "domain": "cloud-native"
+                })
+                
+                assert "structured_requirements" in result
+                assert result["structured_requirements"]["business_goals"] == ["Launch online marketplace", "Increase revenue"]
+                assert "confidence_score" in result
+                assert 0.0 <= result["confidence_score"] <= 1.0
     
     @pytest.mark.asyncio
     async def test_execute_llm_timeout(self, agent):
         """Test handling of LLM timeout errors."""
-        with patch.object(agent, '_call_llm', side_effect=LLMTimeoutError("Timeout", "deepseek", "deepseek-r1")):
-            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
-                with patch('pathlib.Path.exists', return_value=True):
-                    result = await agent.execute({
+        with patch.object(agent, '_read_document', return_value="Test document content"):
+            with patch.object(agent, '_call_llm', side_effect=LLMTimeoutError("Timeout", "deepseek", "deepseek-r1")):
+                with pytest.raises(LLMTimeoutError, match="Timeout"):
+                    await agent.execute({
                         "document_path": "/test/path/document.txt",
                         "project_context": "Test context",
                         "domain": "cloud-native"
                     })
-                    
-                    assert result["success"] is False
-                    assert "error" in result
-                    assert "timeout" in result["error"].lower()
     
     @pytest.mark.asyncio
     async def test_execute_llm_provider_error(self, agent):
         """Test handling of LLM provider errors."""
-        with patch.object(agent, '_call_llm', side_effect=LLMProviderError("Provider error", "deepseek", "deepseek-r1")):
-            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
-                with patch('pathlib.Path.exists', return_value=True):
-                    result = await agent.execute({
+        with patch.object(agent, '_read_document', return_value="Test document content"):
+            with patch.object(agent, '_call_llm', side_effect=LLMProviderError("Provider error", "deepseek", "deepseek-r1")):
+                with pytest.raises(LLMProviderError, match="Provider error"):
+                    await agent.execute({
                         "document_path": "/test/path/document.txt",
                         "project_context": "Test context",
                         "domain": "cloud-native"
                     })
-                    
-                    assert result["success"] is False
-                    assert "error" in result
-                    assert "provider" in result["error"].lower()
     
     @pytest.mark.asyncio
     async def test_execute_invalid_json(self, agent):
         """Test handling of invalid JSON responses."""
-        with patch.object(agent, '_call_llm', return_value="invalid json response"):
-            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
-                with patch('pathlib.Path.exists', return_value=True):
-                    result = await agent.execute({
+        with patch.object(agent, '_read_document', return_value="Test document content"):
+            with patch.object(agent, '_call_llm', return_value="invalid json response"):
+                with pytest.raises(ValueError, match="Could not parse JSON"):
+                    await agent.execute({
                         "document_path": "/test/path/document.txt",
                         "project_context": "Test context",
                         "domain": "cloud-native"
                     })
-                    
-                    assert result["success"] is False
-                    assert "error" in result
-                    assert "json" in result["error"].lower()
     
     @pytest.mark.asyncio
     async def test_execute_file_not_found(self, agent):
         """Test handling of file not found errors."""
         with patch('os.path.exists', return_value=False):
-            result = await agent.execute({
-                "document_path": "/nonexistent/path/document.txt",
-                "project_context": "Test context",
-                "domain": "cloud-native"
-            })
-            
-            assert result["success"] is False
-            assert "error" in result
-            assert "not found" in result["error"].lower()
+            with pytest.raises(Exception, match="Failed to read document"):
+                await agent.execute({
+                    "document_path": "/nonexistent/path/document.txt",
+                    "project_context": "Test context",
+                    "domain": "cloud-native"
+                })
 
 
 class TestArchitectureAgent:
@@ -130,7 +114,7 @@ class TestArchitectureAgent:
     def test_agent_initialization(self, agent):
         """Test agent initialization."""
         assert agent.agent_type == "architecture_designer"
-        assert agent.agent_version == "1.0.0"
+        assert agent.agent_version == "1.1.0"
         assert agent.temperature == 0.5
         assert agent.max_retries == 3
         assert agent.timeout_seconds == 180
@@ -147,8 +131,10 @@ class TestArchitectureAgent:
     @pytest.mark.asyncio
     async def test_execute_success(self, agent, sample_architecture_data):
         """Test successful architecture design."""
+        import json
+        
         # Mock the LLM response
-        with patch.object(agent, '_call_llm', return_value=str(sample_architecture_data)):
+        with patch.object(agent, '_call_llm', return_value=json.dumps(sample_architecture_data)):
             result = await agent.execute({
                 "requirements": {
                     "structured_requirements": {
@@ -164,7 +150,6 @@ class TestArchitectureAgent:
                 "domain": "cloud-native"
             })
             
-            assert result["success"] is True
             assert "architecture" in result
             assert result["architecture"]["overview"] == "Microservices-based e-commerce platform"
     
@@ -172,27 +157,21 @@ class TestArchitectureAgent:
     async def test_execute_llm_timeout(self, agent):
         """Test handling of LLM timeout errors."""
         with patch.object(agent, '_call_llm', side_effect=LLMTimeoutError("Timeout", "deepseek", "deepseek-r1")):
-            result = await agent.execute({
-                "requirements": {"structured_requirements": {}},
-                "project_context": "Test context",
-                "domain": "cloud-native"
-            })
-            
-            assert result["success"] is False
-            assert "error" in result
-            assert "timeout" in result["error"].lower()
+            with pytest.raises(LLMTimeoutError, match="Timeout"):
+                await agent.execute({
+                    "requirements": {"structured_requirements": {}},
+                    "project_context": "Test context",
+                    "domain": "cloud-native"
+                })
     
     @pytest.mark.asyncio
     async def test_execute_missing_requirements(self, agent):
         """Test handling of missing requirements."""
-        result = await agent.execute({
-            "project_context": "Test context",
-            "domain": "cloud-native"
-        })
-        
-        assert result["success"] is False
-        assert "error" in result
-        assert "requirements" in result["error"].lower()
+        with pytest.raises(ValueError, match="requirements is required"):
+            await agent.execute({
+                "project_context": "Test context",
+                "domain": "cloud-native"
+            })
 
 
 class TestAgentErrorHandling:
@@ -200,29 +179,19 @@ class TestAgentErrorHandling:
     
     @pytest.mark.asyncio
     async def test_retry_mechanism(self):
-        """Test that agents retry on transient errors."""
+        """Test that agents raise retryable errors for higher-level retry logic."""
         agent = RequirementsAgent()
         
-        # Mock LLM to fail twice then succeed
-        call_count = 0
-        async def mock_call_llm(*args, **kwargs):
-            nonlocal call_count
-            call_count += 1
-            if call_count <= 2:
-                raise LLMTimeoutError("Temporary timeout", "deepseek", "deepseek-r1")
-            return '{"structured_requirements": {"business_goals": ["test"]}}'
-        
-        with patch.object(agent, '_call_llm', side_effect=mock_call_llm):
-            with patch('builtins.open', MagicMock()):
-                with patch('os.path.exists', return_value=True):
-                    result = await agent.execute({
+        # Mock LLM to fail with retryable error
+        with patch.object(agent, '_read_document', return_value="Test document content"):
+            with patch.object(agent, '_call_llm', side_effect=LLMTimeoutError("Temporary timeout", "deepseek", "deepseek-r1")):
+                # Agent should raise the error for higher-level retry logic to handle
+                with pytest.raises(LLMTimeoutError, match="Temporary timeout"):
+                    await agent.execute({
                         "document_path": "/test/path/document.txt",
                         "project_context": "Test context",
                         "domain": "cloud-native"
                     })
-                    
-                    assert result["success"] is True
-                    assert call_count == 3  # Should have retried twice
     
     @pytest.mark.asyncio
     async def test_fallback_provider(self):

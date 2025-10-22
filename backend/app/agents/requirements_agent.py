@@ -62,6 +62,39 @@ class RequirementsAgent(BaseAgent):
         Returns:
             System prompt string with detailed instructions for requirements analysis
         """
+        # Use simpler prompt for smaller models like llama3.2:3b
+        if self.llm_model and "llama3.2" in self.llm_model:
+            return """You are a requirements extraction AI. Your ONLY job is to return valid JSON.
+
+CRITICAL: You MUST return ONLY valid JSON. No explanations, no markdown, no code blocks, no other text.
+
+Extract requirements from the document and return this exact JSON format:
+{
+  "structured_requirements": {
+    "business_goals": ["goal1", "goal2"],
+    "functional_requirements": ["req1", "req2"],
+    "non_functional_requirements": {
+      "performance": ["perf1"],
+      "security": ["sec1"],
+      "scalability": ["scale1"]
+    },
+    "constraints": ["constraint1"],
+    "stakeholders": ["stakeholder1"]
+  },
+  "clarification_questions": [
+    {
+      "question": "What is the expected user load?",
+      "category": "performance",
+      "priority": 1,
+      "rationale": "Need to understand scalability requirements"
+    }
+  ],
+  "identified_gaps": ["gap1"],
+  "confidence_score": 0.8
+}
+
+IMPORTANT: Start your response with { and end with }. No other text."""
+        
         return """You are an expert business analyst. Extract requirements from documents and structure them into JSON.
 
 TASK: Analyze the document and extract:
@@ -157,9 +190,10 @@ Be concise, accurate, and focus on actionable requirements."""
             prompt = self._build_extraction_prompt(content, project_context, domain)
             
             # 3. Call LLM for requirements extraction
+            from langchain_core.messages import SystemMessage, HumanMessage
             messages = [
-                {"role": "system", "content": self.get_system_prompt()},
-                {"role": "user", "content": prompt}
+                SystemMessage(content=self.get_system_prompt()),
+                HumanMessage(content=prompt)
             ]
             
             response = await self._call_llm(messages)

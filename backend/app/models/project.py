@@ -80,6 +80,14 @@ class Project(Base):
         comment="Current project status"
     )
     
+    # Owner relationship
+    owner_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id"),
+        nullable=True,
+        comment="Project owner user ID"
+    )
+    
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -97,6 +105,11 @@ class Project(Base):
     )
     
     # Relationships
+    owner: Mapped[Optional["User"]] = relationship(
+        "User",
+        back_populates="projects",
+        lazy="select"
+    )
     requirements: Mapped[List["Requirement"]] = relationship(
         "Requirement",
         back_populates="project",

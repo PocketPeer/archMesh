@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Interactive Architecture Visualizer Component.
  * 
@@ -13,6 +15,7 @@ import {
   Controls,
   MiniMap,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -145,7 +148,7 @@ const ArchitectureVisualizerInner: React.FC<ArchitectureVisualizerProps> = ({
 
   // Handle external search query
   useEffect(() => {
-    if (searchQuery !== storeSearchQuery) {
+    if (searchQuery !== storeSearchQuery && searchQuery !== undefined) {
       setSearchQuery(searchQuery);
     }
   }, [searchQuery, storeSearchQuery, setSearchQuery]);
@@ -237,8 +240,10 @@ const ArchitectureVisualizerInner: React.FC<ArchitectureVisualizerProps> = ({
 
   // Handle edge click
   const onEdgeClickHandler = useCallback((event: React.MouseEvent, edge: Edge<CustomEdgeData>) => {
-    const dependency = edge.data.dependency;
-    onDependencyClick?.(dependency);
+    if (edge.data?.dependency) {
+      const dependency = edge.data.dependency;
+      onDependencyClick?.(dependency);
+    }
   }, [onDependencyClick]);
 
   // Handle viewport change
@@ -320,8 +325,14 @@ const ArchitectureVisualizerInner: React.FC<ArchitectureVisualizerProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [zoomIn, zoomOut, resetView]);
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <div className={`relative w-full h-full ${className}`}>
+      {isMounted && (
       <ReactFlow
         ref={reactFlowWrapper}
         nodes={nodes}
@@ -330,7 +341,7 @@ const ArchitectureVisualizerInner: React.FC<ArchitectureVisualizerProps> = ({
         onNodeClick={onNodeClickHandler}
         onNodeDoubleClick={onNodeDoubleClickHandler}
         onEdgeClick={onEdgeClickHandler}
-        onViewportChange={onViewportChange}
+        onMoveEnd={onViewportChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
@@ -348,7 +359,7 @@ const ArchitectureVisualizerInner: React.FC<ArchitectureVisualizerProps> = ({
           color="#e5e7eb" 
           gap={20} 
           size={1}
-          variant="dots"
+          variant={BackgroundVariant.Dots}
         />
         
         {showControls && (
@@ -376,6 +387,7 @@ const ArchitectureVisualizerInner: React.FC<ArchitectureVisualizerProps> = ({
           />
         )}
       </ReactFlow>
+      )}
 
       {/* Architecture Controls */}
       {showControls && (

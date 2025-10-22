@@ -4,23 +4,30 @@ Pytest configuration and fixtures for the ArchMesh test suite.
 This module provides shared fixtures and configuration for all tests.
 """
 
-import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock
-from uuid import uuid4
 import os
-import tempfile
-import shutil
 
-# Set test environment variables
+# Set test environment variables BEFORE any other imports
 os.environ['ENVIRONMENT'] = 'test'
-os.environ['DATABASE_URL'] = 'sqlite:///test.db'
+os.environ['DATABASE_URL'] = 'sqlite+aiosqlite:///:memory:'
 os.environ['REDIS_URL'] = 'redis://localhost:6379/1'
 os.environ['PINECONE_API_KEY'] = 'test-pinecone-key'
 os.environ['PINECONE_ENVIRONMENT'] = 'test-env'
 os.environ['NEO4J_URI'] = 'bolt://localhost:7687'
 os.environ['NEO4J_USER'] = 'neo4j'
 os.environ['NEO4J_PASSWORD'] = 'test-password'
+os.environ['DEFAULT_LLM_PROVIDER'] = 'deepseek'
+os.environ['DEFAULT_LLM_MODEL'] = 'deepseek-r1'
+os.environ['DEEPSEEK_BASE_URL'] = 'http://localhost:11434'
+os.environ['DEEPSEEK_MODEL'] = 'deepseek-r1'
+
+import pytest
+import asyncio
+from unittest.mock import Mock, AsyncMock
+from uuid import uuid4
+import tempfile
+import shutil
+from httpx import AsyncClient
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture(scope="session")
@@ -772,6 +779,189 @@ def mock_neo4j_result():
             ]
         }
     ]
+
+
+# Additional fixtures for missing test data
+@pytest.fixture
+def sample_requirements_data():
+    """Sample requirements data for testing."""
+    return {
+        'structured_requirements': {
+            'business_goals': ['Launch online marketplace', 'Increase revenue'],
+            'functional_requirements': ['User registration', 'Product catalog'],
+            'non_functional_requirements': {
+                'performance': ['Handle 1000 users'],
+                'security': ['Encrypt data']
+            }
+        },
+        'confidence_score': 0.9,
+        'status': 'completed'
+    }
+
+
+@pytest.fixture
+def sample_architecture_data():
+    """Sample architecture data for testing."""
+    return {
+        'architecture': {
+            'overview': 'Microservices-based e-commerce platform',
+            'style': 'microservices',
+            'components': [
+                {
+                    'id': 'user-service',
+                    'name': 'User Service',
+                    'type': 'service',
+                    'technology': 'Node.js'
+                }
+            ]
+        },
+        'quality_score': 0.85,
+        'status': 'completed'
+    }
+
+
+@pytest.fixture
+def sample_project_data():
+    """Sample project data for testing."""
+    return {
+        'name': 'Test E-commerce Project',
+        'description': 'A test e-commerce platform',
+        'domain': 'cloud-native',
+        'status': 'pending',
+        'mode': 'greenfield'
+    }
+
+
+@pytest.fixture
+def sample_existing_architecture():
+    """Sample existing architecture for brownfield testing."""
+    return {
+        'services': [
+            {
+                'id': 'user-service',
+                'name': 'User Service',
+                'type': 'service',
+                'technology': 'Node.js + Express',
+                'description': 'Handles user authentication and profiles',
+                'endpoints': ['/api/users', '/api/auth'],
+                'dependencies': ['user-database'],
+                'health_status': 'healthy',
+                'version': '1.0.0'
+            }
+        ],
+        'dependencies': [
+            {
+                'id': 'user-service-to-db',
+                'from': 'user-service',
+                'to': 'user-database',
+                'type': 'database-call',
+                'description': 'User service reads/writes to user database'
+            }
+        ],
+        'technology_stack': {
+            'Node.js': 1,
+            'PostgreSQL': 1
+        }
+    }
+
+
+@pytest.fixture
+def sample_requirements():
+    """Sample requirements for brownfield testing."""
+    return {
+        'confidence_score': 0.9,
+        'structured_requirements': {
+            'business_goals': ['Improve user experience'],
+            'functional_requirements': ['Add real-time notifications'],
+            'non_functional_requirements': {
+                'performance': ['Response time < 200ms'],
+                'scalability': ['Support 10k users']
+            }
+        }
+    }
+
+
+@pytest.fixture
+def sample_workflow_data():
+    """Sample workflow data for testing."""
+    return {
+        'session_id': 'test-session-123',
+        'project_id': 'test-project-456',
+        'current_stage': 'starting',
+        'state_data': {
+            'requirements': {
+                'structured_requirements': {
+                    'business_goals': ['Test goal'],
+                    'functional_requirements': ['Test requirement']
+                }
+            },
+            'architecture': {
+                'overview': 'Test architecture'
+            }
+        },
+        'is_active': True,
+        'created_at': '2023-01-01T00:00:00Z',
+        'updated_at': '2023-01-01T00:00:00Z'
+    }
+
+
+@pytest.fixture
+def mock_db_session():
+    """Create a mock database session for testing."""
+    from unittest.mock import AsyncMock, MagicMock
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from uuid import uuid4
+    
+    # Create a mock session
+    mock_session = AsyncMock(spec=AsyncSession)
+    
+    # Mock common database operations
+    mock_session.execute = AsyncMock()
+    mock_session.commit = AsyncMock()
+    mock_session.rollback = AsyncMock()
+    mock_session.close = AsyncMock()
+    mock_session.add = MagicMock()
+    mock_session.delete = MagicMock()
+    mock_session.merge = MagicMock()
+    mock_session.flush = AsyncMock()
+    
+    # Mock refresh to set project attributes (simulating database refresh)
+    def mock_refresh(project):
+        if hasattr(project, 'id') and project.id is None:
+            project.id = uuid4()
+        if hasattr(project, 'created_at') and project.created_at is None:
+            project.created_at = "2023-01-01T00:00:00Z"
+        if hasattr(project, 'updated_at') and project.updated_at is None:
+            project.updated_at = "2023-01-01T00:00:00Z"
+    
+    mock_session.refresh.side_effect = mock_refresh
+    
+    # Mock execute to return mock results for queries
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = []
+    mock_result.fetchall.return_value = []
+    mock_result.fetchone.return_value = None
+    mock_session.execute.return_value = mock_result
+    
+    return mock_session
+
+
+@pytest.fixture
+def client(mock_db_session):
+    """Create a test client for API testing with mocked database."""
+    from app.main import app
+    from fastapi.testclient import TestClient
+    from app.core.database import get_db
+    
+    # Override the database dependency
+    app.dependency_overrides[get_db] = lambda: mock_db_session
+    
+    client = TestClient(app)
+    
+    yield client
+    
+    # Clean up dependency overrides
+    app.dependency_overrides.clear()
 
 
 # Test markers for different test types

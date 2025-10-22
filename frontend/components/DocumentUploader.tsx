@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import { SuccessToast } from '@/src/components/common';
 
 interface DocumentUploaderProps {
   onUploadComplete: (file: File) => void;
@@ -35,6 +36,13 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 export function DocumentUploader({ onUploadComplete, projectId }: DocumentUploaderProps) {
   const [uploadedFiles, setUploadedFiles] = useState<FileWithProgress[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [lastUploadedFile, setLastUploadedFile] = useState<File | null>(null);
+
+  // Handle toast dismissal with useCallback to prevent render issues
+  const handleToastDismiss = useCallback(() => {
+    setShowSuccessToast(false);
+  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     // Handle rejected files
@@ -88,6 +96,8 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
 
         // Call the completion callback
         onUploadComplete(fileWithProgress.file);
+        setLastUploadedFile(fileWithProgress.file);
+        setShowSuccessToast(true);
         toast.success(`${fileWithProgress.file.name || 'File'} uploaded successfully!`);
         
         // Check if all uploads are complete
@@ -352,6 +362,22 @@ export function DocumentUploader({ onUploadComplete, projectId }: DocumentUpload
           </div>
         </CardContent>
       </Card>
+
+      {/* Success Toast */}
+      {showSuccessToast && lastUploadedFile && (
+        <SuccessToast
+          title="Upload Successful!"
+          message={`${lastUploadedFile.name} has been uploaded successfully. You can now start the workflow.`}
+          action={{
+            label: "Start Workflow",
+            onClick: () => {
+              // Navigate to the upload page to start a workflow
+              window.location.href = `/projects/${projectId}/upload`;
+            }
+          }}
+          onDismiss={handleToastDismiss}
+        />
+      )}
     </div>
   );
 }

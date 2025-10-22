@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Diff Visualization Component.
  * 
@@ -11,6 +13,7 @@ import {
   Node,
   Edge,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   NodeTypes,
@@ -362,7 +365,7 @@ export const DiffVisualization: React.FC<DiffVisualizationProps> = ({
           color="#e5e7eb" 
           gap={20} 
           size={1}
-          variant="dots"
+          variant={BackgroundVariant.Dots}
         />
       </ReactFlow>
       

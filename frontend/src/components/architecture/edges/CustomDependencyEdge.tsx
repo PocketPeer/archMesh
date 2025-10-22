@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Custom Dependency Edge Component.
  * 
@@ -67,11 +69,6 @@ export const CustomDependencyEdge: React.FC<EdgeProps<CustomEdgeData>> = memo(({
         path={edgePath}
         markerEnd={markerEnd}
         style={finalStyle}
-        className={`
-          transition-all duration-200
-          ${isSelected ? 'stroke-blue-500 stroke-2' : ''}
-          ${isHighlighted ? 'stroke-yellow-500' : ''}
-        `}
       />
       
       {/* Edge Label */}

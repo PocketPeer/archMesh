@@ -1,0 +1,136 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "ArchMesh" [ref=e6]:
+          - /url: /
+          - heading "ArchMesh" [level=1] [ref=e8]
+        - button [ref=e10]:
+          - img
+    - main [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - heading "ArchMesh PoC" [level=1] [ref=e21]
+          - paragraph [ref=e22]: Transform your requirements documents into comprehensive system architectures with AI-powered analysis and human-guided review
+          - generic [ref=e23]:
+            - link "Try AI Assistant" [ref=e24]:
+              - /url: /demo-vibe
+              - button "Try AI Assistant" [ref=e25]:
+                - text: Try AI Assistant
+                - img
+            - link "Try Document Upload" [ref=e26]:
+              - /url: /demo-upload
+              - button "Try Document Upload" [ref=e27]:
+                - text: Try Document Upload
+                - img
+            - link "Create New Project" [ref=e28]:
+              - /url: /projects
+              - button "Create New Project" [ref=e29]:
+                - img
+                - text: Create New Project
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e33]:
+              - heading "Get Started" [level=2] [ref=e34]
+              - paragraph [ref=e35]: Sign in to access your projects or create a new one
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - heading "Welcome to ArchMesh" [level=3] [ref=e41]
+              - paragraph [ref=e42]: Sign in to access your projects or explore our demos
+              - generic [ref=e43]:
+                - link "Sign In" [ref=e44]:
+                  - /url: /login
+                  - button "Sign In" [ref=e45]
+                - link "Create Account" [ref=e46]:
+                  - /url: /register
+                  - button "Create Account" [ref=e47]
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - heading "Get Started Fast" [level=2] [ref=e50]
+              - paragraph [ref=e51]: Explore the demos below to see ArchMesh in action. No account required.
+            - generic [ref=e52]:
+              - generic [ref=e53]:
+                - generic [ref=e54]:
+                  - img [ref=e56]
+                  - generic [ref=e59]: 1. Document Upload
+                - generic [ref=e60]:
+                  - paragraph [ref=e61]: Upload your requirements documents in various formats. Our AI analyzes and extracts structured requirements automatically.
+                  - link "Open Demo" [ref=e63]:
+                    - /url: /demo-upload
+                    - button "Open Demo" [ref=e64]
+              - generic [ref=e65]:
+                - generic [ref=e66]:
+                  - img [ref=e68]
+                  - generic [ref=e71]: 2. Architecture Design
+                - generic [ref=e72]:
+                  - paragraph [ref=e73]: Generate comprehensive system architectures with C4 diagrams, technology stacks, and component specifications.
+                  - link "Open Demo" [ref=e75]:
+                    - /url: /demo-architecture
+                    - button "Open Demo" [ref=e76]
+              - generic [ref=e77]:
+                - generic [ref=e78]:
+                  - img [ref=e80]
+                  - generic [ref=e85]: 3. AI Assistant
+                - generic [ref=e86]:
+                  - paragraph [ref=e87]: Chat with the AI assistant for guidance, code generation, and workflow help.
+                  - link "Open Demo" [ref=e89]:
+                    - /url: /demo-vibe
+                    - button "Open Demo" [ref=e90]
+          - generic [ref=e91]:
+            - generic [ref=e92]:
+              - heading "Key Features" [level=2] [ref=e93]
+              - paragraph [ref=e94]: AI-guided workflows from requirements to architecture, code, and review
+            - generic [ref=e95]:
+              - generic [ref=e96]:
+                - generic [ref=e97]:
+                  - img [ref=e99]
+                  - generic [ref=e101]: AI-Powered Analysis
+                - paragraph [ref=e103]: Agents parse requirements, detect gaps, suggest clarifications, and track confidence
+              - generic [ref=e104]:
+                - generic [ref=e105]:
+                  - img [ref=e107]
+                  - generic [ref=e110]: Architecture & C4
+                - paragraph [ref=e112]: Generate architectures with C4 diagrams, technology stacks, alternatives, and tradeoffs
+              - generic [ref=e113]:
+                - generic [ref=e114]:
+                  - img [ref=e116]
+                  - generic [ref=e118]: Human Oversight
+                - paragraph [ref=e120]: Review gates, approvals/rejections, and change tracking to ensure quality and alignment
+              - generic [ref=e121]:
+                - generic [ref=e122]:
+                  - img [ref=e124]
+                  - generic [ref=e127]: Vibe Coding & Sandbox
+                - paragraph [ref=e129]: Natural-language-to-code with model switching and secure sandbox execution
+          - generic [ref=e130]:
+            - heading "Ready to Get Started?" [level=2] [ref=e131]
+            - paragraph [ref=e132]: Transform your requirements into professional system architectures today
+            - generic [ref=e133]:
+              - link "Create Account" [ref=e134]:
+                - /url: /register
+                - button "Create Account" [ref=e135]:
+                  - img
+                  - text: Create Account
+              - link "Sign In" [ref=e136]:
+                - /url: /login
+                - button "Sign In" [ref=e137]
+  - generic [ref=e141]:
+    - generic [ref=e142]:
+      - img [ref=e143]
+      - text: AI Assistant
+      - img [ref=e145]
+    - generic [ref=e147]:
+      - button "DeepSeek R1" [ref=e148]:
+        - text: DeepSeek R1
+        - img
+      - button "+" [ref=e149]
+      - button "×" [ref=e150]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e156] [cursor=pointer]:
+    - img [ref=e157]
+  - alert [ref=e162]
+```

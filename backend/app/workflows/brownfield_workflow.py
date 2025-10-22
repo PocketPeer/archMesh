@@ -27,7 +27,7 @@ from loguru import logger
 from app.agents.github_analyzer_agent import GitHubAnalyzerAgent
 from app.agents.requirements_agent import RequirementsAgent
 from app.agents.architecture_agent import ArchitectureAgent
-from app.services.knowledge_base_service import KnowledgeBaseService
+from app.services.local_knowledge_base_service import LocalKnowledgeBaseService
 from app.config import settings
 
 
@@ -97,11 +97,11 @@ class BrownfieldWorkflow:
         self.github_analyzer = GitHubAnalyzerAgent()
         self.requirements_agent = RequirementsAgent()
         self.architecture_agent = ArchitectureAgent(
-            knowledge_base_service=KnowledgeBaseService()
+            knowledge_base_service=LocalKnowledgeBaseService()
         )
         
-        # Initialize knowledge base service
-        self.kb_service = KnowledgeBaseService()
+        # Initialize local knowledge base service
+        self.kb_service = LocalKnowledgeBaseService()
         
         # Initialize checkpointing
         if PostgresSaver is not None:

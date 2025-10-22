@@ -68,10 +68,12 @@ class LLMStrategy:
         },
         TaskType.DEVELOPMENT: {
             "best": ("deepseek", "deepseek-r1"),  # Free and capable
+            "fast": ("ollama", "llama3.2:3b"),  # Fast local fallback
             "fallback": ("openai", "gpt-4")
         },
         TaskType.TESTING: {
             "best": ("deepseek", "deepseek-r1"),  # Free and capable
+            "fast": ("ollama", "llama3.2:3b"),  # Fast local fallback
             "fallback": ("openai", "gpt-4")
         }
     }
@@ -158,6 +160,9 @@ class LLMStrategy:
             elif provider == "deepseek":
                 # DeepSeek is always available if base URL is configured
                 return bool(settings.deepseek_base_url)
+            elif provider == "ollama":
+                # Ollama is available if local server is running
+                return True  # Assume Ollama is available locally
             else:
                 return False
         except Exception as e:

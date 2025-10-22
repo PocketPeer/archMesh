@@ -1,0 +1,51 @@
+[
+  {
+    "project_id": "test-project-001",
+    "chunk_type": "architecture",
+    "content": "Architecture Style: Microservices\n            Communication Patterns: REST API, WebSocket\n            Data Storage: {\n  \"primary\": \"PostgreSQL\",\n  \"cache\": \"Redis\",\n  \"graph\": \"Neo4j\"\n}\n            Deployment Strategy: {\n  \"strategy\": \"Containerized\",\n  \"orchestration\": \"Docker Compose\"\n}\n            Security Approach: {\n  \"authentication\": \"JWT\",\n  \"authorization\": \"Role-based\"\n}\n            Scalability Features: {\n  \"horizontal\": true,\n  \"load_balancing\": true\n}",
+    "architecture_style": "Microservices",
+    "patterns": [
+      "API Gateway",
+      "Event-Driven"
+    ]
+  },
+  {
+    "project_id": "test-project-001",
+    "chunk_type": "service",
+    "content": "Service Name: API Gateway\n                Service Type: Gateway\n                Technology Stack: FastAPI\n                Responsibilities: \n                Interfaces: REST API, WebSocket\n                Dependencies: User Service, Project Service\n                Scalability: High",
+    "service_name": "API Gateway",
+    "service_type": "Gateway",
+    "technology": "FastAPI"
+  },
+  {
+    "project_id": "test-project-001",
+    "chunk_type": "service",
+    "content": "Service Name: User Service\n                Service Type: Microservice\n                Technology Stack: FastAPI\n                Responsibilities: \n                Interfaces: REST API\n                Dependencies: Database\n                Scalability: Medium",
+    "service_name": "User Service",
+    "service_type": "Microservice",
+    "technology": "FastAPI"
+  },
+  {
+    "project_id": "test-project-001",
+    "chunk_type": "service",
+    "content": "Service Name: Project Service\n                Service Type: Microservice\n                Technology Stack: FastAPI\n                Responsibilities: \n                Interfaces: REST API\n                Dependencies: User Service, Database\n                Scalability: Medium",
+    "service_name": "Project Service",
+    "service_type": "Microservice",
+    "technology": "FastAPI"
+  },
+  {
+    "project_id": "test-project-001",
+    "chunk_type": "technology",
+    "content": "Programming Languages: {\n  \"Python\": 60,\n  \"TypeScript\": 30,\n  \"JavaScript\": 10\n}\n            Frameworks: FastAPI, Next.js, React\n            Databases: PostgreSQL, Redis, Neo4j\n            Infrastructure Tools: Docker, Docker Compose\n            Testing Frameworks: \n            Build Tools:",
+    "languages": [
+      "Python",
+      "TypeScript",
+      "JavaScript"
+    ],
+    "frameworks": [
+      "FastAPI",
+      "Next.js",
+      "React"
+    ]
+  }
+]

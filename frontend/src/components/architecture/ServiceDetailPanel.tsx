@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Service Detail Panel Component.
  * 
@@ -81,6 +83,10 @@ export const ServiceDetailPanel: React.FC<ServiceDetailPanelProps> = ({
   onDelete,
   className = '',
 }) => {
+  if (!service) {
+    return null;
+  }
+  
   const StatusIcon = STATUS_ICONS[service.status];
   const TypeIcon = TYPE_ICONS[service.type];
 

@@ -1,28 +1,11 @@
 import React, { ReactElement } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-// Create a custom render function that includes providers
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
-}
-
+// Create a custom render function
 const customRender = (
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options })
+) => render(ui, { ...options })
 
 // Mock data generators
 export const mockProject = {
@@ -203,7 +186,7 @@ export const mockImpactAnalysis = {
 // Helper functions
 export const waitFor = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-export const mockApiResponse = <T>(data: T, delay = 0) => {
+export const mockApiResponse = <T,>(data: T, delay = 0) => {
   return new Promise<T>(resolve => {
     setTimeout(() => resolve(data), delay)
   })

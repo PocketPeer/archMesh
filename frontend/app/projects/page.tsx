@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Project, ProjectCreate } from '@/types';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { 
   PlusIcon, 
   SearchIcon, 
@@ -27,6 +29,7 @@ import {
 } from 'lucide-react';
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,12 +40,20 @@ export default function ProjectsPage() {
   const [newProject, setNewProject] = useState<ProjectCreate>({
     name: '',
     description: '',
-    domain: 'cloud-native'
+    domain: 'cloud-native',
+    mode: 'greenfield'
   });
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (isAuthenticated) {
+      loadProjects();
+    } else {
+      setLoading(false);
+      // Redirect to login if not authenticated
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     filterProjects();
@@ -52,7 +63,7 @@ export default function ProjectsPage() {
     try {
       setLoading(true);
       const response = await apiClient.listProjects();
-      setProjects(response.items || []);
+      setProjects(response || []);
     } catch (error) {
       console.error('Failed to load projects:', error);
       toast.error('Failed to load projects');
@@ -87,6 +98,11 @@ export default function ProjectsPage() {
   };
 
   const handleCreateProject = async () => {
+    if (!isAuthenticated) {
+      toast.info('Please sign in to create a project');
+      setIsCreateDialogOpen(false);
+      return;
+    }
     try {
       if (!newProject.name.trim()) {
         toast.error('Project name is required');
@@ -95,9 +111,11 @@ export default function ProjectsPage() {
 
       const project = await apiClient.createProject(newProject);
       setProjects(prev => [project, ...prev]);
-      setNewProject({ name: '', description: '', domain: 'cloud-native' });
+      setNewProject({ name: '', description: '', domain: 'cloud-native', mode: 'greenfield' });
       setIsCreateDialogOpen(false);
       toast.success('Project created successfully');
+      // Redirect to project detail page
+      router.push(`/projects/${project.id}`);
     } catch (error) {
       console.error('Failed to create project:', error);
       toast.error('Failed to create project');
@@ -164,6 +182,13 @@ export default function ProjectsPage() {
     }
   };
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !loading) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, loading, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -200,6 +225,18 @@ export default function ProjectsPage() {
     );
   }
 
+  // Show loading while redirecting
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
@@ -214,7 +251,17 @@ export default function ProjectsPage() {
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      toast.info('Please sign in to create a project');
+                      return;
+                    }
+                    router.push('/projects/create');
+                  }}
+                >
                   <PlusIcon className="mr-2 h-5 w-5" />
                   Create Project
                 </Button>
@@ -227,12 +274,18 @@ export default function ProjectsPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
+                  {!isAuthenticated && (
+                    <div className="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                      You must be signed in to create a project.
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm font-medium text-slate-700 mb-2 block">Project Name</label>
                     <Input
                       value={newProject.name}
                       onChange={(e) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Enter project name"
+                      disabled={!isAuthenticated}
                     />
                   </div>
                   <div>
@@ -242,6 +295,7 @@ export default function ProjectsPage() {
                       onChange={(e) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Enter project description (optional)"
                       rows={3}
+                      disabled={!isAuthenticated}
                     />
                   </div>
                   <div>
@@ -250,6 +304,7 @@ export default function ProjectsPage() {
                       value={newProject.domain}
                       onChange={(e) => setNewProject(prev => ({ ...prev, domain: e.target.value as Project['domain'] }))}
                       className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={!isAuthenticated}
                     >
                       <option value="cloud-native">☁️ Cloud-Native</option>
                       <option value="data-platform">📊 Data Platform</option>
@@ -260,7 +315,11 @@ export default function ProjectsPage() {
                     <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateProject} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                    <Button
+                      onClick={handleCreateProject}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      disabled={!isAuthenticated}
+                    >
                       Create Project
                     </Button>
                   </div>

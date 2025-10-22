@@ -49,6 +49,7 @@ jest.mock('sonner', () => ({
 // Mock API client
 jest.mock('@/lib/api-client', () => ({
   apiClient: {
+    // Core methods
     getProject: jest.fn(),
     listWorkflows: jest.fn(),
     getWorkflowStatus: jest.fn(),
@@ -57,6 +58,34 @@ jest.mock('@/lib/api-client', () => ({
     updateProject: jest.fn(),
     approveIntegration: jest.fn(),
     rejectIntegration: jest.fn(),
+    
+    // Authentication methods
+    login: jest.fn(),
+    register: jest.fn(),
+    logout: jest.fn(),
+    
+    // Architecture proposal methods
+    getArchitectureProposal: jest.fn().mockResolvedValue({ data: null }),
+    generateArchitectureProposal: jest.fn().mockResolvedValue({ data: { id: 'proposal-1', content: 'Mock proposal' } }),
+    updateArchitectureProposal: jest.fn(),
+    
+    // Diagram methods
+    generateDiagram: jest.fn().mockResolvedValue({ data: { id: 'diagram-1', content: 'Mock diagram' } }),
+    updateDiagram: jest.fn(),
+    deleteDiagram: jest.fn(),
+    
+    // Knowledge base methods
+    saveArchitectureToKnowledgeBase: jest.fn(),
+    searchKnowledgeBase: jest.fn(),
+    
+    // Project diagrams methods
+    getProjectDiagrams: jest.fn().mockResolvedValue({ data: [] }),
+    generateProjectDiagram: jest.fn(),
+    regenerateDiagram: jest.fn(),
+    getDiagramStatus: jest.fn(),
+    
+    // Base URL property
+    baseUrl: '/api/v1',
   },
 }))
 

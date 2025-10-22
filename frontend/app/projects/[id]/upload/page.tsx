@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { DocumentUploader } from '@/components/DocumentUploader';
+import { AIChatWidget } from '@/src/components/ai-chat/AIChatWidget';
 import { Project, WorkflowStartResponse } from '@/types';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -18,7 +19,9 @@ import { toast } from 'sonner';
 export default function UploadPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const projectId = params.id as string;
+  const retryWorkflowId = searchParams.get('retry');
   
   const [project, setProject] = useState<Project | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -46,41 +49,158 @@ export default function UploadPage() {
 
     if (projectId) {
       loadProject();
+      
+      // If retrying a workflow, load its data
+      if (retryWorkflowId) {
+        loadWorkflowForRetry(retryWorkflowId);
+      }
     }
-  }, [projectId, router]);
+  }, [projectId, retryWorkflowId, router]);
+
+  const loadWorkflowForRetry = async (workflowId: string) => {
+    try {
+      // Load workflow data for retry
+      const workflowData = await apiClient.getWorkflowStatus(workflowId);
+      
+      // Pre-fill form with previous workflow data
+      if ((workflowData as any).state_data?.project_context) {
+        setProjectContext((workflowData as any).state_data.project_context);
+      }
+      
+      if ((workflowData as any).state_data?.domain) {
+        setDomain((workflowData as any).state_data.domain);
+      }
+      
+      if ((workflowData as any).state_data?.llm_provider) {
+        setLlmProvider((workflowData as any).state_data.llm_provider);
+      }
+      
+      toast.info('Previous workflow data loaded for retry');
+    } catch (error) {
+      console.error('Failed to load workflow for retry:', error);
+      toast.error('Failed to load previous workflow data');
+    }
+  };
 
   const handleFileUpload = (file: File) => {
     setUploadedFile(file);
     toast.success(`File ${file.name} uploaded successfully!`);
   };
 
+  // Step 1: Client-side validation
+  const validateForm = (): boolean => {
+    const errors: string[] = [];
+    
+    // File validation
+    if (!uploadedFile) {
+      errors.push('Please upload a file first');
+    } else {
+      // Check file type
+      const allowedTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(uploadedFile.type)) {
+        errors.push('File type not supported. Please upload a .txt, .pdf, or .docx file');
+      }
+      
+      // Check file size (10MB limit)
+      if (uploadedFile.size > 10 * 1024 * 1024) {
+        errors.push('File size too large. Please upload a file smaller than 10MB');
+      }
+      
+      // Check file content (not empty)
+      if (uploadedFile.size === 0) {
+        errors.push('File is empty. Please upload a file with content');
+      }
+    }
+    
+    // Form validation
+    if (!projectContext || projectContext.trim().length < 10) {
+      errors.push('Project context is required and must be at least 10 characters long');
+    }
+    
+    if (!domain) {
+      errors.push('Please select a project domain');
+    }
+    
+    if (!llmProvider) {
+      errors.push('Please select an LLM provider');
+    }
+    
+    // Show errors if any
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    if (!uploadedFile) {
-      toast.error('Please upload a file first');
+    // Step 1: Client-side validation
+    if (!validateForm()) {
       return;
     }
+    
+    // Step 2: If validation passes, redirect to project detail page
+    toast.success('Validation passed! Starting workflow...');
+    
+    // Redirect to project detail page immediately
+    router.push(`/projects/${projectId}`);
+    
+        // Step 3: Start server-side workflow execution in background
+        try {
+          setUploading(true);
+          
+          // Validate file before sending
+          if (!uploadedFile) {
+            throw new Error('No file selected');
+          }
+          
+          const response: WorkflowStartResponse = await apiClient.startArchitectureWorkflow(
+            uploadedFile,
+            projectId,
+            domain,
+            projectContext || undefined,
+            llmProvider
+          );
 
-    try {
-      setUploading(true);
-      const response: WorkflowStartResponse = await apiClient.startArchitectureWorkflow(
-        uploadedFile,
-        projectId,
-        domain,
-        projectContext || undefined,
-        llmProvider
-      );
-
-      toast.success('Workflow started successfully!');
-      // Redirect to project detail page with workflow status
-      router.push(`/projects/${projectId}?workflow=${response.session_id}`);
-    } catch (error) {
-      console.error('Failed to start workflow:', error);
-      toast.error('Failed to start workflow. Please try again.');
-    } finally {
-      setUploading(false);
-    }
+          // Show notification with workflow ID
+          toast.success(`Workflow started successfully! ID: ${response.session_id}`, {
+            duration: 10000,
+            action: {
+              label: 'View Progress',
+              onClick: () => router.push(`/projects/${projectId}?workflow=${response.session_id}`)
+            }
+          });
+          
+          // Update URL with workflow parameter
+          router.push(`/projects/${projectId}?workflow=${response.session_id}`);
+        } catch (error) {
+          console.error('Failed to start workflow:', error);
+          
+          // More specific error handling
+          let errorMessage = 'Failed to start workflow. Please try again.';
+          if (error instanceof Error) {
+            if (error.message.includes('File')) {
+              errorMessage = 'File upload failed. Please check your file and try again.';
+            } else if (error.message.includes('network') || error.message.includes('fetch')) {
+              errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (error.message.includes('validation')) {
+              errorMessage = 'Validation error. Please check your input and try again.';
+            }
+          }
+          
+          toast.error(errorMessage, {
+            duration: 10000,
+            action: {
+              label: 'Retry',
+              onClick: () => handleSubmit(event)
+            }
+          });
+        } finally {
+          setUploading(false);
+        }
   };
 
   const getDomainBadge = (domain: Project['domain']) => {
@@ -211,14 +331,18 @@ export default function UploadPage() {
                 {/* Project Context */}
                 <div>
                   <label className="text-sm font-medium text-slate-700 mb-2 block">
-                    Additional Context (Optional)
+                    Project Context *
                   </label>
                   <Textarea
                     value={projectContext}
                     onChange={(e) => setProjectContext(e.target.value)}
-                    placeholder="Provide any additional context about your project, constraints, or specific requirements..."
+                    placeholder="Provide context about your project, constraints, or specific requirements (minimum 10 characters)..."
                     rows={4}
+                    required
                   />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Required: Minimum 10 characters to help the AI understand your project better
+                  </p>
                 </div>
 
                 {/* Submit Button */}
@@ -313,6 +437,16 @@ export default function UploadPage() {
 
         </div>
       </div>
+      
+      {/* AI Assistant Widget */}
+      <AIChatWidget 
+        context={{
+          projectId: project?.id,
+          projectName: project?.name,
+          projectDomain: project?.domain,
+          uploadPage: true
+        }}
+      />
     </div>
   );
 }

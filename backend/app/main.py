@@ -8,7 +8,7 @@ middleware, routers, and startup/shutdown events.
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, WebSocket, WebSocketDisconnect
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,7 +19,10 @@ from app.config import settings
 from app.core.database import init_db, close_db
 from app.core.redis_client import init_redis, close_redis
 from app.core.logging_config import get_logger
-from app.api.v1 import health, projects, workflows, brownfield
+from app.api.v1 import health, projects, workflows, brownfield, auth
+from app.api.v1 import ai_chat, refinement, diagrams, workflow_diagrams, architecture
+from app.api.v1.simple_architecture import router as simple_architecture_router
+from app.api.v1.admin import router as admin_router
 
 logger = get_logger(__name__)
 
@@ -113,12 +116,20 @@ async def validation_exception_handler(
     """
     logger.warning(f"Validation error on {request.url}: {exc.errors()}")
     
+    # Convert errors to a JSON-serializable format
+    errors = []
+    for error in exc.errors():
+        error_dict = dict(error)
+        # Convert bytes to string in error input
+        if 'input' in error_dict and isinstance(error_dict['input'], bytes):
+            error_dict['input'] = error_dict['input'].decode('utf-8', errors='replace')
+        errors.append(error_dict)
+    
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "detail": "Validation error",
-            "errors": exc.errors(),
-            "body": exc.body,
+            "errors": errors,
         },
     )
 
@@ -211,6 +222,88 @@ app.include_router(
     tags=["brownfield"],
 )
 
+app.include_router(
+    auth.router,
+    prefix=settings.api_v1_prefix,
+    tags=["authentication"],
+)
+
+app.include_router(
+    ai_chat.router,
+    prefix=settings.api_v1_prefix,
+    tags=["ai-chat"],
+)
+
+app.include_router(
+    refinement.router,
+    prefix=settings.api_v1_prefix,
+    tags=["refinement"],
+)
+
+app.include_router(
+    diagrams.router,
+    prefix=settings.api_v1_prefix,
+    tags=["diagrams"],
+)
+
+app.include_router(
+    workflow_diagrams.router,
+    prefix=settings.api_v1_prefix,
+    tags=["workflow-diagrams"],
+)
+
+app.include_router(
+    architecture.router,
+    prefix=settings.api_v1_prefix,
+    tags=["architecture"],
+)
+
+app.include_router(
+    simple_architecture_router,
+    prefix=settings.api_v1_prefix,
+    tags=["simple-architecture"],
+)
+
+app.include_router(
+    admin_router,
+    prefix=settings.api_v1_prefix,
+    tags=["admin"],
+)
+
+
+# WebSocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time updates.
+    
+    Handles WebSocket connections for:
+    - Workflow progress updates
+    - Notification delivery
+    - Live status monitoring
+    """
+    await websocket.accept()
+    logger.info("WebSocket connection established")
+    
+    try:
+        while True:
+            # Wait for messages from client
+            data = await websocket.receive_text()
+            logger.info(f"Received WebSocket message: {data}")
+            
+            # Handle ping/pong
+            if data == "ping":
+                await websocket.send_text("pong")
+            else:
+                # Echo back the message for now
+                await websocket.send_text(f"Echo: {data}")
+                
+    except WebSocketDisconnect:
+        logger.info("WebSocket connection closed")
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        await websocket.close()
+
 
 # Root endpoint
 @app.get("/", tags=["root"])
@@ -269,6 +362,10 @@ def custom_openapi():
         {
             "name": "root",
             "description": "Root endpoints",
+        },
+        {
+            "name": "ai-chat",
+            "description": "AI Chat endpoints (models, sessions, messages)",
         },
     ]
     
