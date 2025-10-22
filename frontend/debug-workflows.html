@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Workflows</title>
+</head>
+<body>
+    <h1>Debug Workflows</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function debugWorkflows() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Test API call
+                const response = await fetch('http://localhost:8000/api/v1/workflows/?skip=0&limit=100&project_id=256c5ff2-86a2-4da9-a709-dd5baafc7703');
+                const data = await response.json();
+                
+                output.innerHTML = `
+                    <h2>API Response:</h2>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    
+                    <h2>Workflows Count: ${data.workflows ? data.workflows.length : 'No workflows property'}</h2>
+                    
+                    <h2>Workflows:</h2>
+                    <ul>
+                        ${data.workflows ? data.workflows.map(w => `
+                            <li>
+                                <strong>ID:</strong> ${w.session_id}<br>
+                                <strong>Stage:</strong> ${w.current_stage}<br>
+                                <strong>Active:</strong> ${w.is_active}<br>
+                                <strong>Started:</strong> ${w.started_at}<br>
+                                <strong>Completed:</strong> ${w.completed_at || 'Not completed'}
+                            </li>
+                        `).join('') : 'No workflows found'}
+                    </ul>
+                `;
+            } catch (error) {
+                output.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        debugWorkflows();
+    </script>
+</body>
+</html>

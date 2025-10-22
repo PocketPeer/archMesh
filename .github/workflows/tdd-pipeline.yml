@@ -1,0 +1,290 @@
+name: TDD Development Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  # Backend Testing
+  backend-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-type: [unit, integration, e2e, performance, security]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: archmesh_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd archmesh-poc/backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio pytest-benchmark
+    
+    - name: Set up test environment
+      run: |
+        cd archmesh-poc/backend
+        cp .env.example .env.test
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/archmesh_test" >> .env.test
+        echo "REDIS_URL=redis://localhost:6379/0" >> .env.test
+        echo "DEFAULT_LLM_PROVIDER=deepseek" >> .env.test
+        echo "DEEPSEEK_BASE_URL=http://localhost:11434" >> .env.test
+    
+    - name: Run unit tests
+      if: matrix.test-type == 'unit'
+      run: |
+        cd archmesh-poc/backend
+        pytest tests/unit/ -v --cov=app --cov-report=xml --cov-report=html --cov-fail-under=90
+    
+    - name: Run integration tests
+      if: matrix.test-type == 'integration'
+      run: |
+        cd archmesh-poc/backend
+        pytest tests/integration/ -v --cov=app --cov-report=xml --cov-report=html --cov-fail-under=85
+    
+    - name: Run E2E tests
+      if: matrix.test-type == 'e2e'
+      run: |
+        cd archmesh-poc/backend
+        pytest tests/e2e/ -v --cov=app --cov-report=xml --cov-report=html --cov-fail-under=80
+    
+    - name: Run performance tests
+      if: matrix.test-type == 'performance'
+      run: |
+        cd archmesh-poc/backend
+        pytest tests/performance/ -v --benchmark-only --benchmark-save=performance
+    
+    - name: Run security tests
+      if: matrix.test-type == 'security'
+      run: |
+        cd archmesh-poc/backend
+        pip install bandit safety semgrep
+        bandit -r app/ -f json -o bandit-report.json
+        safety check --json --output safety-report.json
+        pytest tests/security/ -v
+    
+    - name: Upload coverage reports
+      if: matrix.test-type == 'unit'
+      uses: codecov/codecov-action@v3
+      with:
+        file: archmesh-poc/backend/coverage.xml
+        flags: backend-unit
+        name: backend-unit-coverage
+    
+    - name: Upload performance results
+      if: matrix.test-type == 'performance'
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: archmesh-poc/backend/.benchmarks/
+    
+    - name: Upload security reports
+      if: matrix.test-type == 'security'
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          archmesh-poc/backend/bandit-report.json
+          archmesh-poc/backend/safety-report.json
+
+  # Frontend Testing
+  frontend-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-type: [unit, integration, e2e]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: archmesh-poc/frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd archmesh-poc/frontend
+        npm ci
+    
+    - name: Run unit tests
+      if: matrix.test-type == 'unit'
+      run: |
+        cd archmesh-poc/frontend
+        npm run test:unit -- --coverage --coverageReporters=text --coverageReporters=lcov
+    
+    - name: Run integration tests
+      if: matrix.test-type == 'integration'
+      run: |
+        cd archmesh-poc/frontend
+        npm run test:integration
+    
+    - name: Run E2E tests
+      if: matrix.test-type == 'e2e'
+      run: |
+        cd archmesh-poc/frontend
+        npm run test:e2e
+    
+    - name: Upload coverage reports
+      if: matrix.test-type == 'unit'
+      uses: codecov/codecov-action@v3
+      with:
+        file: archmesh-poc/frontend/coverage/lcov.info
+        flags: frontend-unit
+        name: frontend-unit-coverage
+
+  # Code Quality Checks
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: archmesh-poc/frontend/package-lock.json
+    
+    - name: Install Python dependencies
+      run: |
+        cd archmesh-poc/backend
+        pip install black isort flake8 mypy
+    
+    - name: Install Node.js dependencies
+      run: |
+        cd archmesh-poc/frontend
+        npm ci
+    
+    - name: Run Python linting
+      run: |
+        cd archmesh-poc/backend
+        black --check app/ tests/
+        isort --check-only app/ tests/
+        flake8 app/ tests/
+        mypy app/
+    
+    - name: Run TypeScript linting
+      run: |
+        cd archmesh-poc/frontend
+        npm run lint
+        npm run type-check
+
+  # Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/python@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+    
+    - name: Run Snyk for Node.js
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+  # Build and Deploy
+  build-deploy:
+    needs: [backend-tests, frontend-tests, code-quality, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker images
+      run: |
+        cd archmesh-poc
+        docker build -t archmesh-backend ./backend
+        docker build -t archmesh-frontend ./frontend
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add deployment commands here
+    
+    - name: Run smoke tests
+      run: |
+        echo "Running smoke tests..."
+        # Add smoke test commands here
+
+  # Test Results Summary
+  test-summary:
+    needs: [backend-tests, frontend-tests, code-quality, security-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Test Results Summary
+      run: |
+        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Backend Unit Tests | ${{ needs.backend-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Frontend Unit Tests | ${{ needs.frontend-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Code Quality | ${{ needs.code-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+

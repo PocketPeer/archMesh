@@ -58,7 +58,7 @@ export function ArchitectureViewer({ architecture, onApprove, onReject }: Archit
           const element = mermaidRef.current;
           if (element) {
             element.innerHTML = '';
-            const { svg } = await mermaid.render('c4-diagram', architecture.c4_diagram_context);
+            const { svg } = await mermaid.render('c4-diagram', architecture.c4_diagram_context || '');
             element.innerHTML = svg;
             setIsDiagramLoaded(true);
           }

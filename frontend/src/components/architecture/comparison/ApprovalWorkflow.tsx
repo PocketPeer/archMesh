@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Approval Workflow Component.
  * 

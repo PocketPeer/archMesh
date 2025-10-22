@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.agents.github_analyzer_agent import GitHubAnalyzerAgent
-from app.services.knowledge_base_service import KnowledgeBaseService
+from app.services.local_knowledge_base_service import LocalKnowledgeBaseService
 from app.schemas.brownfield import (
     ArchitectureGraphResponse,
     ErrorResponse,
@@ -35,14 +35,14 @@ from app.schemas.brownfield import (
 router = APIRouter(prefix="/brownfield", tags=["brownfield"])
 
 
-def get_knowledge_base_service() -> KnowledgeBaseService:
+def get_knowledge_base_service() -> LocalKnowledgeBaseService:
     """
-    Dependency to get Knowledge Base Service instance.
+    Dependency to get Local Knowledge Base Service instance.
     
     Returns:
-        KnowledgeBaseService: Configured knowledge base service
+        LocalKnowledgeBaseService: Configured local knowledge base service
     """
-    return KnowledgeBaseService()
+    return LocalKnowledgeBaseService()
 
 
 @router.post(
@@ -220,7 +220,7 @@ async def analyze_repository(
 )
 async def search_knowledge(
     request: KnowledgeSearchRequest,
-    kb_service: KnowledgeBaseService = Depends(get_knowledge_base_service),
+    kb_service: LocalKnowledgeBaseService = Depends(get_knowledge_base_service),
 ) -> KnowledgeSearchResponse:
     """
     Search knowledge base for relevant architecture patterns.
@@ -340,7 +340,7 @@ async def search_knowledge(
 )
 async def get_architecture_graph(
     project_id: str,
-    kb_service: KnowledgeBaseService = Depends(get_knowledge_base_service),
+    kb_service: LocalKnowledgeBaseService = Depends(get_knowledge_base_service),
 ) -> ArchitectureGraphResponse:
     """
     Get architecture graph for visualization.
@@ -508,7 +508,7 @@ async def get_project_context(
         default=True,
         description="Whether to include AI-generated recommendations"
     ),
-    kb_service: KnowledgeBaseService = Depends(get_knowledge_base_service),
+    kb_service: LocalKnowledgeBaseService = Depends(get_knowledge_base_service),
 ) -> FeatureContextResponse:
     """
     Get context for adding a new feature to existing project.
@@ -613,7 +613,7 @@ async def get_project_context(
 )
 async def get_project_status(
     project_id: str,
-    kb_service: KnowledgeBaseService = Depends(get_knowledge_base_service),
+    kb_service: LocalKnowledgeBaseService = Depends(get_knowledge_base_service),
 ) -> ProjectStatusResponse:
     """
     Get project analysis and indexing status.

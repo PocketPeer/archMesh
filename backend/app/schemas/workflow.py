@@ -18,7 +18,7 @@ class WorkflowStageEnum(str, Enum):
     STARTING = "starting"
     DOCUMENT_ANALYSIS = "document_analysis"
     REQUIREMENT_EXTRACTION = "requirement_extraction"
-    REQUIREMENT_REVIEW = "requirement_review"
+    REQUIREMENTS_REVIEW = "requirements_review"
     ARCHITECTURE_DESIGN = "architecture_design"
     ARCHITECTURE_REVIEW = "architecture_review"
     TECHNOLOGY_SELECTION = "technology_selection"
@@ -258,7 +258,7 @@ class HumanFeedback(BaseModel):
     stage: WorkflowStageEnum = Field(
         ...,
         description="Workflow stage this feedback relates to",
-        examples=[WorkflowStageEnum.REQUIREMENT_REVIEW]
+        examples=[WorkflowStageEnum.REQUIREMENTS_REVIEW]
     )
     content: str = Field(
         ...,

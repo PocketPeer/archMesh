@@ -875,6 +875,38 @@ class ArchitectureWorkflow:
             return session_id, result
         except Exception as e:
             logger.error(f"Failed to start workflow for session {str(session_id)}: {str(e)}")
+            
+            # Update database with error status if db is provided
+            if db:
+                try:
+                    from sqlalchemy import update
+                    await db.execute(
+                        update(WorkflowSession)
+                        .where(WorkflowSession.id == session_id)
+                        .values(
+                            current_stage="failed",
+                            state_data={
+                                "current_stage": "failed",
+                                "stage_progress": 0.0,
+                                "completed_stages": [],
+                                "stage_results": {},
+                                "pending_tasks": [],
+                                "errors": [{"error": str(e), "timestamp": datetime.utcnow().isoformat()}],
+                                "metadata": {
+                                    "error_type": type(e).__name__,
+                                    "error_message": str(e)
+                                }
+                            },
+                            is_active=False,
+                            completed_at=datetime.utcnow(),
+                            last_activity=datetime.utcnow()
+                        )
+                    )
+                    await db.commit()
+                    logger.info(f"Updated workflow session {session_id} with error status")
+                except Exception as db_error:
+                    logger.error(f"Failed to update workflow session with error: {str(db_error)}")
+            
             raise
 
     async def continue_workflow(

@@ -85,6 +85,19 @@ class ArchitectureAgent(BaseAgent):
         Returns:
             System prompt string with detailed instructions for architecture design
         """
+        # Use simpler prompt for smaller models like llama3.2:3b
+        if self.llm_model and "llama3.2" in self.llm_model:
+            return """Design system architecture based on requirements.
+
+Return JSON with:
+- Architecture overview
+- Technology stack
+- Key components
+- Security considerations
+- Scalability approach
+
+Return ONLY valid JSON, no other text."""
+        
         return """You are a senior enterprise architect. Design system architecture based on requirements.
 
 TASK: Create comprehensive architecture design including:
@@ -206,9 +219,10 @@ Be practical, specific, and focus on actionable architecture decisions."""
         prompt = self._build_architecture_prompt(requirements, constraints, preferences, domain)
         
         # 2. Call LLM for architecture design
+        from langchain_core.messages import SystemMessage, HumanMessage
         messages = [
-            {"role": "system", "content": self.get_system_prompt()},
-            {"role": "user", "content": prompt}
+            SystemMessage(content=self.get_system_prompt()),
+            HumanMessage(content=prompt)
         ]
         
         response = await self._call_llm(messages)
@@ -271,9 +285,10 @@ Be practical, specific, and focus on actionable architecture decisions."""
         prompt = self._build_brownfield_prompt(requirements, constraints, preferences, domain, context)
         
         # 3. Call LLM with brownfield system prompt
+        from langchain_core.messages import SystemMessage, HumanMessage
         messages = [
-            {"role": "system", "content": self.get_brownfield_system_prompt()},
-            {"role": "user", "content": prompt}
+            SystemMessage(content=self.get_brownfield_system_prompt()),
+            HumanMessage(content=prompt)
         ]
         
         response = await self._call_llm(messages)
@@ -1279,6 +1294,13 @@ Output ONLY the JSON, wrapped in code blocks. Be comprehensive and detailed."""
             architecture_data["quality_score"] = self._calculate_architecture_quality(
                 architecture_data, requirements
             )
+            
+            # Preserve brownfield-specific fields if they exist
+            brownfield_fields = ["integration_strategy", "c4_diagram_context", "existing_services", "similar_features"]
+            for field in brownfield_fields:
+                if field in architecture_data:
+                    # Keep the field as-is
+                    pass
             
             return architecture_data
             

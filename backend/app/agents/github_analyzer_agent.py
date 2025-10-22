@@ -1111,9 +1111,10 @@ Output as JSON following this exact schema:
 
 Be thorough, specific, and provide actionable insights. Consider both explicit and implicit architectural decisions."""
 
+        from langchain_core.messages import SystemMessage, HumanMessage
         messages = [
-            {"role": "system", "content": self.get_system_prompt()},
-            {"role": "user", "content": prompt}
+            SystemMessage(content=self.get_system_prompt()),
+            HumanMessage(content=prompt)
         ]
         
         response = await self._call_llm(messages)

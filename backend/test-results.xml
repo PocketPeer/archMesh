@@ -1,0 +1,1002 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="17" failures="12" skipped="0" tests="94" time="119.703" timestamp="2025-10-17T17:08:08.055051" hostname="T7RRFJVMQ1"><testcase classname="tests.unit.test_agents.TestRequirementsAgent" name="test_agent_initialization" time="0.003" /><testcase classname="tests.unit.test_agents.TestRequirementsAgent" name="test_get_system_prompt" time="0.001" /><testcase classname="tests.unit.test_agents.TestRequirementsAgent" name="test_execute_success" time="0.001"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py, line 39&#10;      @pytest.mark.asyncio&#10;      async def test_execute_success(self, agent, sample_requirements_data):&#10;          &quot;&quot;&quot;Test successful requirements extraction.&quot;&quot;&quot;&#10;          # Mock the LLM response&#10;          mock_response = MagicMock()&#10;          mock_response.content = str(sample_requirements_data)&#10;&#10;          with patch.object(agent, '_call_llm', return_value=str(sample_requirements_data)):&#10;              with patch('builtins.open', MagicMock()):&#10;                  with patch('os.path.exists', return_value=True):&#10;                      result = await agent.execute({&#10;                          &quot;document_path&quot;: &quot;/test/path/document.txt&quot;,&#10;                          &quot;project_context&quot;: &quot;Test context&quot;,&#10;                          &quot;domain&quot;: &quot;cloud-native&quot;&#10;                      })&#10;&#10;                      assert result[&quot;success&quot;] is True&#10;                      assert &quot;requirements&quot; in result&#10;                      assert result[&quot;requirements&quot;][&quot;structured_requirements&quot;][&quot;business_goals&quot;] == [&quot;Launch online marketplace&quot;, &quot;Increase revenue&quot;]&#10;E       fixture 'sample_requirements_data' not found&#10;&gt;       available fixtures: _session_event_loop, agent, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_agents.py::&lt;event_loop&gt;, tests/unit/test_agents.py::TestRequirementsAgent::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py:39&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py, line 39
+      @pytest.mark.asyncio
+      async def test_execute_success(self, agent, sample_requirements_data):
+          """Test successful requirements extraction."""
+          # Mock the LLM response
+          mock_response = MagicMock()
+          mock_response.content = str(sample_requirements_data)
+
+          with patch.object(agent, '_call_llm', return_value=str(sample_requirements_data)):
+              with patch('builtins.open', MagicMock()):
+                  with patch('os.path.exists', return_value=True):
+                      result = await agent.execute({
+                          "document_path": "/test/path/document.txt",
+                          "project_context": "Test context",
+                          "domain": "cloud-native"
+                      })
+
+                      assert result["success"] is True
+                      assert "requirements" in result
+                      assert result["requirements"]["structured_requirements"]["business_goals"] == ["Launch online marketplace", "Increase revenue"]
+E       fixture 'sample_requirements_data' not found
+&gt;       available fixtures: _session_event_loop, agent, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_agents.py::&lt;event_loop&gt;, tests/unit/test_agents.py::TestRequirementsAgent::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py:39</error></testcase><testcase classname="tests.unit.test_agents.TestRequirementsAgent" name="test_execute_llm_timeout" time="0.014"><failure message="app.core.error_handling.LLMTimeoutError: Timeout">self = &lt;test_agents.TestRequirementsAgent object at 0x1698202b0&gt;
+agent = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x315578460&gt;
+
+    @pytest.mark.asyncio
+    async def test_execute_llm_timeout(self, agent):
+        """Test handling of LLM timeout errors."""
+        with patch.object(agent, '_call_llm', side_effect=LLMTimeoutError("Timeout", "deepseek", "deepseek-r1")):
+            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
+                with patch('pathlib.Path.exists', return_value=True):
+&gt;                   result = await agent.execute({
+                        "document_path": "/test/path/document.txt",
+                        "project_context": "Test context",
+                        "domain": "cloud-native"
+                    })
+
+tests/unit/test_agents.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/agents/requirements_agent.py:166: in execute
+    response = await self._call_llm(messages)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;AsyncMock name='_call_llm' id='13242959136'&gt;
+args = ([SystemMessage(content='You are an expert business analyst. Extract requirements from documents and structure them in...he JSON, wrapped in ```json code blocks. Be precise and comprehensive.', additional_kwargs={}, response_metadata={})],)
+kwargs = {}
+_call = call([SystemMessage(content='You are an expert business analyst. Extract requirements from documents and structure the...the JSON, wrapped in ```json code blocks. Be precise and comprehensive.', additional_kwargs={}, response_metadata={})])
+effect = LLMTimeoutError('Timeout')
+
+    async def _execute_mock_call(self, /, *args, **kwargs):
+        # This is nearly just like super(), except for special handling
+        # of coroutines
+    
+        _call = _Call((args, kwargs), two=True)
+        self.await_count += 1
+        self.await_args = _call
+        self.await_args_list.append(_call)
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+&gt;               raise effect
+E               app.core.error_handling.LLMTimeoutError: Timeout
+
+/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/mock.py:2154: LLMTimeoutError</failure></testcase><testcase classname="tests.unit.test_agents.TestRequirementsAgent" name="test_execute_llm_provider_error" time="0.004"><failure message="app.core.error_handling.LLMProviderError: Provider error">self = &lt;test_agents.TestRequirementsAgent object at 0x169820460&gt;
+agent = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x3155a1fa0&gt;
+
+    @pytest.mark.asyncio
+    async def test_execute_llm_provider_error(self, agent):
+        """Test handling of LLM provider errors."""
+        with patch.object(agent, '_call_llm', side_effect=LLMProviderError("Provider error", "deepseek", "deepseek-r1")):
+            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
+                with patch('pathlib.Path.exists', return_value=True):
+&gt;                   result = await agent.execute({
+                        "document_path": "/test/path/document.txt",
+                        "project_context": "Test context",
+                        "domain": "cloud-native"
+                    })
+
+tests/unit/test_agents.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/agents/requirements_agent.py:166: in execute
+    response = await self._call_llm(messages)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;AsyncMock name='_call_llm' id='13243129472'&gt;
+args = ([SystemMessage(content='You are an expert business analyst. Extract requirements from documents and structure them in...he JSON, wrapped in ```json code blocks. Be precise and comprehensive.', additional_kwargs={}, response_metadata={})],)
+kwargs = {}
+_call = call([SystemMessage(content='You are an expert business analyst. Extract requirements from documents and structure the...the JSON, wrapped in ```json code blocks. Be precise and comprehensive.', additional_kwargs={}, response_metadata={})])
+effect = LLMProviderError('Provider error')
+
+    async def _execute_mock_call(self, /, *args, **kwargs):
+        # This is nearly just like super(), except for special handling
+        # of coroutines
+    
+        _call = _Call((args, kwargs), two=True)
+        self.await_count += 1
+        self.await_args = _call
+        self.await_args_list.append(_call)
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+&gt;               raise effect
+E               app.core.error_handling.LLMProviderError: Provider error
+
+/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/mock.py:2154: LLMProviderError</failure></testcase><testcase classname="tests.unit.test_agents.TestRequirementsAgent" name="test_execute_invalid_json" time="0.005"><failure message="ValueError: Could not parse JSON from response: invalid json response...">self = &lt;test_agents.TestRequirementsAgent object at 0x169820610&gt;
+agent = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x3157cdb80&gt;
+
+    @pytest.mark.asyncio
+    async def test_execute_invalid_json(self, agent):
+        """Test handling of invalid JSON responses."""
+        with patch.object(agent, '_call_llm', return_value="invalid json response"):
+            with patch('builtins.open', MagicMock(return_value=MagicMock(read=MagicMock(return_value="test content")))):
+                with patch('pathlib.Path.exists', return_value=True):
+&gt;                   result = await agent.execute({
+                        "document_path": "/test/path/document.txt",
+                        "project_context": "Test context",
+                        "domain": "cloud-native"
+                    })
+
+tests/unit/test_agents.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/agents/requirements_agent.py:169: in execute
+    structured_data = self._parse_json_response(response)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x3157cdb80&gt;
+response = 'invalid json response'
+
+    def _parse_json_response(self, response: str) -&gt; Dict[str, Any]:
+        """
+        Parse JSON from LLM response, handling markdown code blocks.
+    
+        Args:
+            response: Raw LLM response text
+    
+        Returns:
+            Parsed JSON as dictionary
+    
+        Raises:
+            ValueError: If JSON parsing fails
+        """
+        try:
+            # First, try to parse as-is
+            return json.loads(response)
+        except json.JSONDecodeError:
+            pass
+    
+        # Try to extract JSON from markdown code blocks
+        json_patterns = [
+            r'```json\s*\n(.*?)\n```',  # ```json ... ```
+            r'```\s*\n(.*?)\n```',      # ``` ... ```
+            r'`([^`]+)`',               # `...`
+        ]
+    
+        for pattern in json_patterns:
+            matches = re.findall(pattern, response, re.DOTALL | re.IGNORECASE)
+            for match in matches:
+                try:
+                    return json.loads(match.strip())
+                except json.JSONDecodeError:
+                    continue
+    
+        # Try to find JSON-like content in the response
+        json_match = re.search(r'\{.*\}', response, re.DOTALL)
+        if json_match:
+            try:
+                return json.loads(json_match.group())
+            except json.JSONDecodeError:
+                pass
+    
+        # If all else fails, raise an error
+&gt;       raise ValueError(f"Could not parse JSON from response: {response[:500]}...")
+E       ValueError: Could not parse JSON from response: invalid json response...
+
+app/agents/base_agent.py:319: ValueError</failure></testcase><testcase classname="tests.unit.test_agents.TestRequirementsAgent" name="test_execute_file_not_found" time="0.001"><failure message="Exception: Failed to read document /nonexistent/path/document.txt: Document file not found: /nonexistent/path/document.txt">self = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x315605520&gt;
+file_path = '/nonexistent/path/document.txt'
+
+    async def _read_document(self, file_path: str) -&gt; str:
+        """
+        Read document content from file.
+    
+        Currently supports:
+        - .txt files (plain text)
+        - .md files (markdown)
+        - .rst files (reStructuredText)
+    
+        Future support planned for:
+        - .pdf files (PDF documents)
+        - .pptx files (PowerPoint presentations)
+        - .docx files (Word documents)
+    
+        Args:
+            file_path: Path to the document file
+    
+        Returns:
+            Document content as string
+    
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            ValueError: If file format is not supported
+            Exception: For other file reading errors
+        """
+        try:
+            path = Path(file_path)
+    
+            # Check if file exists
+            if not path.exists():
+&gt;               raise FileNotFoundError(f"Document file not found: {file_path}")
+E               FileNotFoundError: Document file not found: /nonexistent/path/document.txt
+
+app/agents/requirements_agent.py:238: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;test_agents.TestRequirementsAgent object at 0x1698207c0&gt;
+agent = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x315605520&gt;
+
+    @pytest.mark.asyncio
+    async def test_execute_file_not_found(self, agent):
+        """Test handling of file not found errors."""
+        with patch('os.path.exists', return_value=False):
+&gt;           result = await agent.execute({
+                "document_path": "/nonexistent/path/document.txt",
+                "project_context": "Test context",
+                "domain": "cloud-native"
+            })
+
+tests/unit/test_agents.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/agents/requirements_agent.py:151: in execute
+    content = await self._read_document(document_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x315605520&gt;
+file_path = '/nonexistent/path/document.txt'
+
+    async def _read_document(self, file_path: str) -&gt; str:
+        """
+        Read document content from file.
+    
+        Currently supports:
+        - .txt files (plain text)
+        - .md files (markdown)
+        - .rst files (reStructuredText)
+    
+        Future support planned for:
+        - .pdf files (PDF documents)
+        - .pptx files (PowerPoint presentations)
+        - .docx files (Word documents)
+    
+        Args:
+            file_path: Path to the document file
+    
+        Returns:
+            Document content as string
+    
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            ValueError: If file format is not supported
+            Exception: For other file reading errors
+        """
+        try:
+            path = Path(file_path)
+    
+            # Check if file exists
+            if not path.exists():
+                raise FileNotFoundError(f"Document file not found: {file_path}")
+    
+            # Check file extension
+            if path.suffix.lower() not in self.supported_extensions:
+                raise ValueError(
+                    f"Unsupported file format: {path.suffix}. "
+                    f"Supported formats: {', '.join(self.supported_extensions)}"
+                )
+    
+            # Read file content
+            with open(path, 'r', encoding='utf-8') as file:
+                content = file.read()
+    
+            logger.debug(
+                f"Document read successfully",
+                extra={
+                    "file_path": file_path,
+                    "file_size": len(content),
+                    "file_extension": path.suffix,
+                }
+            )
+    
+            return content
+    
+        except UnicodeDecodeError as e:
+            # Try with different encoding
+            try:
+                with open(path, 'r', encoding='latin-1') as file:
+                    content = file.read()
+                logger.warning(f"Document read with latin-1 encoding: {file_path}")
+                return content
+            except Exception:
+                raise ValueError(f"Could not decode document file: {file_path}. Error: {str(e)}")
+    
+        except Exception as e:
+&gt;           raise Exception(f"Failed to read document {file_path}: {str(e)}")
+E           Exception: Failed to read document /nonexistent/path/document.txt: Document file not found: /nonexistent/path/document.txt
+
+app/agents/requirements_agent.py:273: Exception</failure></testcase><testcase classname="tests.unit.test_agents.TestArchitectureAgent" name="test_agent_initialization" time="0.001" /><testcase classname="tests.unit.test_agents.TestArchitectureAgent" name="test_get_system_prompt" time="0.001" /><testcase classname="tests.unit.test_agents.TestArchitectureAgent" name="test_execute_success" time="0.001"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py, line 147&#10;      @pytest.mark.asyncio&#10;      async def test_execute_success(self, agent, sample_architecture_data):&#10;          &quot;&quot;&quot;Test successful architecture design.&quot;&quot;&quot;&#10;          # Mock the LLM response&#10;          with patch.object(agent, '_call_llm', return_value=str(sample_architecture_data)):&#10;              result = await agent.execute({&#10;                  &quot;requirements&quot;: {&#10;                      &quot;structured_requirements&quot;: {&#10;                          &quot;business_goals&quot;: [&quot;Launch online marketplace&quot;],&#10;                          &quot;functional_requirements&quot;: [&quot;User registration&quot;],&#10;                          &quot;non_functional_requirements&quot;: {&#10;                              &quot;performance&quot;: [&quot;Handle 1000 users&quot;],&#10;                              &quot;security&quot;: [&quot;Encrypt data&quot;]&#10;                          }&#10;                      }&#10;                  },&#10;                  &quot;project_context&quot;: &quot;Test context&quot;,&#10;                  &quot;domain&quot;: &quot;cloud-native&quot;&#10;              })&#10;&#10;              assert result[&quot;success&quot;] is True&#10;              assert &quot;architecture&quot; in result&#10;              assert result[&quot;architecture&quot;][&quot;overview&quot;] == &quot;Microservices-based e-commerce platform&quot;&#10;E       fixture 'sample_architecture_data' not found&#10;&gt;       available fixtures: _session_event_loop, agent, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_agents.py::&lt;event_loop&gt;, tests/unit/test_agents.py::TestArchitectureAgent::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py:147&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py, line 147
+      @pytest.mark.asyncio
+      async def test_execute_success(self, agent, sample_architecture_data):
+          """Test successful architecture design."""
+          # Mock the LLM response
+          with patch.object(agent, '_call_llm', return_value=str(sample_architecture_data)):
+              result = await agent.execute({
+                  "requirements": {
+                      "structured_requirements": {
+                          "business_goals": ["Launch online marketplace"],
+                          "functional_requirements": ["User registration"],
+                          "non_functional_requirements": {
+                              "performance": ["Handle 1000 users"],
+                              "security": ["Encrypt data"]
+                          }
+                      }
+                  },
+                  "project_context": "Test context",
+                  "domain": "cloud-native"
+              })
+
+              assert result["success"] is True
+              assert "architecture" in result
+              assert result["architecture"]["overview"] == "Microservices-based e-commerce platform"
+E       fixture 'sample_architecture_data' not found
+&gt;       available fixtures: _session_event_loop, agent, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_agents.py::&lt;event_loop&gt;, tests/unit/test_agents.py::TestArchitectureAgent::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_agents.py:147</error></testcase><testcase classname="tests.unit.test_agents.TestArchitectureAgent" name="test_execute_llm_timeout" time="0.002"><failure message="app.core.error_handling.LLMTimeoutError: Timeout">self = &lt;test_agents.TestArchitectureAgent object at 0x16982d040&gt;
+agent = &lt;app.agents.architecture_agent.ArchitectureAgent object at 0x31237a370&gt;
+
+    @pytest.mark.asyncio
+    async def test_execute_llm_timeout(self, agent):
+        """Test handling of LLM timeout errors."""
+        with patch.object(agent, '_call_llm', side_effect=LLMTimeoutError("Timeout", "deepseek", "deepseek-r1")):
+&gt;           result = await agent.execute({
+                "requirements": {"structured_requirements": {}},
+                "project_context": "Test context",
+                "domain": "cloud-native"
+            })
+
+tests/unit/test_agents.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/agents/architecture_agent.py:175: in execute
+    return await self._execute_greenfield(input_data)
+app/agents/architecture_agent.py:215: in _execute_greenfield
+    response = await self._call_llm(messages)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;AsyncMock name='_call_llm' id='13190537712'&gt;
+args = ([SystemMessage(content='You are a senior enterprise architect. Design system architecture based on requirements.\n\nT... ONLY the JSON, wrapped in code blocks. Be comprehensive and detailed.', additional_kwargs={}, response_metadata={})],)
+kwargs = {}
+_call = call([SystemMessage(content='You are a senior enterprise architect. Design system architecture based on requirements.\...t ONLY the JSON, wrapped in code blocks. Be comprehensive and detailed.', additional_kwargs={}, response_metadata={})])
+effect = LLMTimeoutError('Timeout')
+
+    async def _execute_mock_call(self, /, *args, **kwargs):
+        # This is nearly just like super(), except for special handling
+        # of coroutines
+    
+        _call = _Call((args, kwargs), two=True)
+        self.await_count += 1
+        self.await_args = _call
+        self.await_args_list.append(_call)
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+&gt;               raise effect
+E               app.core.error_handling.LLMTimeoutError: Timeout
+
+/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/mock.py:2154: LLMTimeoutError</failure></testcase><testcase classname="tests.unit.test_agents.TestArchitectureAgent" name="test_execute_missing_requirements" time="0.001"><failure message="ValueError: requirements is required in input_data">self = &lt;test_agents.TestArchitectureAgent object at 0x16982d1c0&gt;
+agent = &lt;app.agents.architecture_agent.ArchitectureAgent object at 0x315628d90&gt;
+
+    @pytest.mark.asyncio
+    async def test_execute_missing_requirements(self, agent):
+        """Test handling of missing requirements."""
+&gt;       result = await agent.execute({
+            "project_context": "Test context",
+            "domain": "cloud-native"
+        })
+
+tests/unit/test_agents.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;app.agents.architecture_agent.ArchitectureAgent object at 0x315628d90&gt;
+input_data = {'domain': 'cloud-native', 'project_context': 'Test context'}
+
+    async def execute(self, input_data: Dict[str, Any]) -&gt; Dict[str, Any]:
+        """
+        Design architecture based on requirements and constraints.
+    
+        Args:
+            input_data: Dictionary containing:
+                - requirements: Structured requirements from RequirementsAgent
+                - constraints: Optional organizational constraints
+                - preferences: Optional architecture style preferences
+                - domain: Project domain (cloud-native, data-platform, enterprise)
+                - session_id: Optional workflow session ID for logging
+                - mode: "greenfield" or "brownfield" (default: "greenfield")
+                - project_id: UUID for brownfield mode
+                - existing_architecture: Optional existing architecture data
+    
+        Returns:
+            Dictionary containing:
+                - architecture_overview: High-level architecture description
+                - c4_diagram_context: Mermaid C4 diagram code
+                - components: Detailed component specifications
+                - technology_stack: Recommended technology stack
+                - alternatives: Alternative architectural approaches
+                - implementation_plan: Phased implementation guidance
+                - integration_strategy: For brownfield mode
+                - metadata: Additional processing information
+    
+        Raises:
+            ValueError: If required input data is missing
+            Exception: For other processing errors
+        """
+        try:
+            # Validate input
+            if "requirements" not in input_data:
+&gt;               raise ValueError("requirements is required in input_data")
+E               ValueError: requirements is required in input_data
+
+app/agents/architecture_agent.py:148: ValueError</failure></testcase><testcase classname="tests.unit.test_agents.TestAgentErrorHandling" name="test_retry_mechanism" time="0.002"><failure message="Exception: Failed to read document /test/path/document.txt: Document file not found: /test/path/document.txt">self = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x315731160&gt;
+file_path = '/test/path/document.txt'
+
+    async def _read_document(self, file_path: str) -&gt; str:
+        """
+        Read document content from file.
+    
+        Currently supports:
+        - .txt files (plain text)
+        - .md files (markdown)
+        - .rst files (reStructuredText)
+    
+        Future support planned for:
+        - .pdf files (PDF documents)
+        - .pptx files (PowerPoint presentations)
+        - .docx files (Word documents)
+    
+        Args:
+            file_path: Path to the document file
+    
+        Returns:
+            Document content as string
+    
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            ValueError: If file format is not supported
+            Exception: For other file reading errors
+        """
+        try:
+            path = Path(file_path)
+    
+            # Check if file exists
+            if not path.exists():
+&gt;               raise FileNotFoundError(f"Document file not found: {file_path}")
+E               FileNotFoundError: Document file not found: /test/path/document.txt
+
+app/agents/requirements_agent.py:238: FileNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+self = &lt;test_agents.TestAgentErrorHandling object at 0x16982d580&gt;
+
+    @pytest.mark.asyncio
+    async def test_retry_mechanism(self):
+        """Test that agents retry on transient errors."""
+        agent = RequirementsAgent()
+    
+        # Mock LLM to fail twice then succeed
+        call_count = 0
+        async def mock_call_llm(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count &lt;= 2:
+                raise LLMTimeoutError("Temporary timeout", "deepseek", "deepseek-r1")
+            return '{"structured_requirements": {"business_goals": ["test"]}}'
+    
+        with patch.object(agent, '_call_llm', side_effect=mock_call_llm):
+            with patch('builtins.open', MagicMock()):
+                with patch('os.path.exists', return_value=True):
+&gt;                   result = await agent.execute({
+                        "document_path": "/test/path/document.txt",
+                        "project_context": "Test context",
+                        "domain": "cloud-native"
+                    })
+
+tests/unit/test_agents.py:218: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+app/agents/requirements_agent.py:151: in execute
+    content = await self._read_document(document_path)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;app.agents.requirements_agent.RequirementsAgent object at 0x315731160&gt;
+file_path = '/test/path/document.txt'
+
+    async def _read_document(self, file_path: str) -&gt; str:
+        """
+        Read document content from file.
+    
+        Currently supports:
+        - .txt files (plain text)
+        - .md files (markdown)
+        - .rst files (reStructuredText)
+    
+        Future support planned for:
+        - .pdf files (PDF documents)
+        - .pptx files (PowerPoint presentations)
+        - .docx files (Word documents)
+    
+        Args:
+            file_path: Path to the document file
+    
+        Returns:
+            Document content as string
+    
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            ValueError: If file format is not supported
+            Exception: For other file reading errors
+        """
+        try:
+            path = Path(file_path)
+    
+            # Check if file exists
+            if not path.exists():
+                raise FileNotFoundError(f"Document file not found: {file_path}")
+    
+            # Check file extension
+            if path.suffix.lower() not in self.supported_extensions:
+                raise ValueError(
+                    f"Unsupported file format: {path.suffix}. "
+                    f"Supported formats: {', '.join(self.supported_extensions)}"
+                )
+    
+            # Read file content
+            with open(path, 'r', encoding='utf-8') as file:
+                content = file.read()
+    
+            logger.debug(
+                f"Document read successfully",
+                extra={
+                    "file_path": file_path,
+                    "file_size": len(content),
+                    "file_extension": path.suffix,
+                }
+            )
+    
+            return content
+    
+        except UnicodeDecodeError as e:
+            # Try with different encoding
+            try:
+                with open(path, 'r', encoding='latin-1') as file:
+                    content = file.read()
+                logger.warning(f"Document read with latin-1 encoding: {file_path}")
+                return content
+            except Exception:
+                raise ValueError(f"Could not decode document file: {file_path}. Error: {str(e)}")
+    
+        except Exception as e:
+&gt;           raise Exception(f"Failed to read document {file_path}: {str(e)}")
+E           Exception: Failed to read document /test/path/document.txt: Document file not found: /test/path/document.txt
+
+app/agents/requirements_agent.py:273: Exception</failure></testcase><testcase classname="tests.unit.test_agents.TestAgentErrorHandling" name="test_fallback_provider" time="0.001" /><testcase classname="tests.unit.test_api.TestProjectEndpoints" name="test_create_project" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 16&#10;      @pytest.mark.asyncio&#10;      async def test_create_project(self, client: AsyncClient, sample_project_data):&#10;          &quot;&quot;&quot;Test project creation.&quot;&quot;&quot;&#10;          response = await client.post(&quot;/api/v1/projects/&quot;, json=sample_project_data)&#10;&#10;          assert response.status_code == status.HTTP_201_CREATED&#10;          data = response.json()&#10;          assert data[&quot;name&quot;] == sample_project_data[&quot;name&quot;]&#10;          assert data[&quot;description&quot;] == sample_project_data[&quot;description&quot;]&#10;          assert data[&quot;domain&quot;] == sample_project_data[&quot;domain&quot;]&#10;          assert &quot;id&quot; in data&#10;          assert &quot;created_at&quot; in data&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:16&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 16
+      @pytest.mark.asyncio
+      async def test_create_project(self, client: AsyncClient, sample_project_data):
+          """Test project creation."""
+          response = await client.post("/api/v1/projects/", json=sample_project_data)
+
+          assert response.status_code == status.HTTP_201_CREATED
+          data = response.json()
+          assert data["name"] == sample_project_data["name"]
+          assert data["description"] == sample_project_data["description"]
+          assert data["domain"] == sample_project_data["domain"]
+          assert "id" in data
+          assert "created_at" in data
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:16</error></testcase><testcase classname="tests.unit.test_api.TestProjectEndpoints" name="test_get_project" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 29&#10;      @pytest.mark.asyncio&#10;      async def test_get_project(self, client: AsyncClient, sample_project_data):&#10;          &quot;&quot;&quot;Test getting a project by ID.&quot;&quot;&quot;&#10;          # First create a project&#10;          create_response = await client.post(&quot;/api/v1/projects/&quot;, json=sample_project_data)&#10;          project_id = create_response.json()[&quot;id&quot;]&#10;&#10;          # Then get it&#10;          response = await client.get(f&quot;/api/v1/projects/{project_id}&quot;)&#10;&#10;          assert response.status_code == status.HTTP_200_OK&#10;          data = response.json()&#10;          assert data[&quot;id&quot;] == project_id&#10;          assert data[&quot;name&quot;] == sample_project_data[&quot;name&quot;]&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:29&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 29
+      @pytest.mark.asyncio
+      async def test_get_project(self, client: AsyncClient, sample_project_data):
+          """Test getting a project by ID."""
+          # First create a project
+          create_response = await client.post("/api/v1/projects/", json=sample_project_data)
+          project_id = create_response.json()["id"]
+
+          # Then get it
+          response = await client.get(f"/api/v1/projects/{project_id}")
+
+          assert response.status_code == status.HTTP_200_OK
+          data = response.json()
+          assert data["id"] == project_id
+          assert data["name"] == sample_project_data["name"]
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:29</error></testcase><testcase classname="tests.unit.test_api.TestProjectEndpoints" name="test_get_project_not_found" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 44&#10;      @pytest.mark.asyncio&#10;      async def test_get_project_not_found(self, client: AsyncClient):&#10;          &quot;&quot;&quot;Test getting a non-existent project.&quot;&quot;&quot;&#10;          response = await client.get(&quot;/api/v1/projects/nonexistent-id&quot;)&#10;&#10;          assert response.status_code == status.HTTP_404_NOT_FOUND&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:44&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 44
+      @pytest.mark.asyncio
+      async def test_get_project_not_found(self, client: AsyncClient):
+          """Test getting a non-existent project."""
+          response = await client.get("/api/v1/projects/nonexistent-id")
+
+          assert response.status_code == status.HTTP_404_NOT_FOUND
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:44</error></testcase><testcase classname="tests.unit.test_api.TestProjectEndpoints" name="test_list_projects" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 51&#10;      @pytest.mark.asyncio&#10;      async def test_list_projects(self, client: AsyncClient, sample_project_data):&#10;          &quot;&quot;&quot;Test listing projects.&quot;&quot;&quot;&#10;          # Create a few projects&#10;          for i in range(3):&#10;              project_data = sample_project_data.copy()&#10;              project_data[&quot;name&quot;] = f&quot;Test Project {i}&quot;&#10;              await client.post(&quot;/api/v1/projects/&quot;, json=project_data)&#10;&#10;          # List projects&#10;          response = await client.get(&quot;/api/v1/projects/&quot;)&#10;&#10;          assert response.status_code == status.HTTP_200_OK&#10;          data = response.json()&#10;          assert len(data[&quot;items&quot;]) &gt;= 3&#10;          assert data[&quot;total&quot;] &gt;= 3&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:51&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 51
+      @pytest.mark.asyncio
+      async def test_list_projects(self, client: AsyncClient, sample_project_data):
+          """Test listing projects."""
+          # Create a few projects
+          for i in range(3):
+              project_data = sample_project_data.copy()
+              project_data["name"] = f"Test Project {i}"
+              await client.post("/api/v1/projects/", json=project_data)
+
+          # List projects
+          response = await client.get("/api/v1/projects/")
+
+          assert response.status_code == status.HTTP_200_OK
+          data = response.json()
+          assert len(data["items"]) &gt;= 3
+          assert data["total"] &gt;= 3
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:51</error></testcase><testcase classname="tests.unit.test_api.TestProjectEndpoints" name="test_update_project" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 68&#10;      @pytest.mark.asyncio&#10;      async def test_update_project(self, client: AsyncClient, sample_project_data):&#10;          &quot;&quot;&quot;Test updating a project.&quot;&quot;&quot;&#10;          # Create a project&#10;          create_response = await client.post(&quot;/api/v1/projects/&quot;, json=sample_project_data)&#10;          project_id = create_response.json()[&quot;id&quot;]&#10;&#10;          # Update it&#10;          update_data = {&quot;name&quot;: &quot;Updated Project Name&quot;, &quot;status&quot;: &quot;processing&quot;}&#10;          response = await client.put(f&quot;/api/v1/projects/{project_id}&quot;, json=update_data)&#10;&#10;          assert response.status_code == status.HTTP_200_OK&#10;          data = response.json()&#10;          assert data[&quot;name&quot;] == &quot;Updated Project Name&quot;&#10;          assert data[&quot;status&quot;] == &quot;processing&quot;&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:68&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 68
+      @pytest.mark.asyncio
+      async def test_update_project(self, client: AsyncClient, sample_project_data):
+          """Test updating a project."""
+          # Create a project
+          create_response = await client.post("/api/v1/projects/", json=sample_project_data)
+          project_id = create_response.json()["id"]
+
+          # Update it
+          update_data = {"name": "Updated Project Name", "status": "processing"}
+          response = await client.put(f"/api/v1/projects/{project_id}", json=update_data)
+
+          assert response.status_code == status.HTTP_200_OK
+          data = response.json()
+          assert data["name"] == "Updated Project Name"
+          assert data["status"] == "processing"
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:68</error></testcase><testcase classname="tests.unit.test_api.TestProjectEndpoints" name="test_delete_project" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 84&#10;      @pytest.mark.asyncio&#10;      async def test_delete_project(self, client: AsyncClient, sample_project_data):&#10;          &quot;&quot;&quot;Test deleting a project.&quot;&quot;&quot;&#10;          # Create a project&#10;          create_response = await client.post(&quot;/api/v1/projects/&quot;, json=sample_project_data)&#10;          project_id = create_response.json()[&quot;id&quot;]&#10;&#10;          # Delete it&#10;          response = await client.delete(f&quot;/api/v1/projects/{project_id}&quot;)&#10;&#10;          assert response.status_code == status.HTTP_204_NO_CONTENT&#10;&#10;          # Verify it's deleted&#10;          get_response = await client.get(f&quot;/api/v1/projects/{project_id}&quot;)&#10;          assert get_response.status_code == status.HTTP_404_NOT_FOUND&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:84&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 84
+      @pytest.mark.asyncio
+      async def test_delete_project(self, client: AsyncClient, sample_project_data):
+          """Test deleting a project."""
+          # Create a project
+          create_response = await client.post("/api/v1/projects/", json=sample_project_data)
+          project_id = create_response.json()["id"]
+
+          # Delete it
+          response = await client.delete(f"/api/v1/projects/{project_id}")
+
+          assert response.status_code == status.HTTP_204_NO_CONTENT
+
+          # Verify it's deleted
+          get_response = await client.get(f"/api/v1/projects/{project_id}")
+          assert get_response.status_code == status.HTTP_404_NOT_FOUND
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestProjectEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:84</error></testcase><testcase classname="tests.unit.test_api.TestWorkflowEndpoints" name="test_start_architecture_workflow" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 104&#10;      @pytest.mark.asyncio&#10;      async def test_start_architecture_workflow(self, client: AsyncClient, sample_project_data):&#10;          &quot;&quot;&quot;Test starting an architecture workflow.&quot;&quot;&quot;&#10;          # Create a project first&#10;          project_response = await client.post(&quot;/api/v1/projects/&quot;, json=sample_project_data)&#10;          project_id = project_response.json()[&quot;id&quot;]&#10;&#10;          # Mock file upload&#10;          with patch('app.core.file_storage.FileStorage.save_uploaded_file') as mock_save:&#10;              mock_save.return_value = {&#10;                  &quot;file_id&quot;: &quot;test-file-id&quot;,&#10;                  &quot;file_path&quot;: &quot;/test/path/document.txt&quot;&#10;              }&#10;&#10;              with patch('app.workflows.architecture_workflow.ArchitectureWorkflow.start') as mock_start:&#10;                  mock_start.return_value = (&quot;test-session-id&quot;, {&quot;status&quot;: &quot;started&quot;})&#10;&#10;                  with patch('app.core.file_storage.FileStorage.move_to_processed'):&#10;                      # Create a test file&#10;                      test_file_content = b&quot;Test document content&quot;&#10;&#10;                      response = await client.post(&#10;                          &quot;/api/v1/workflows/start-architecture&quot;,&#10;                          data={&#10;                              &quot;project_id&quot;: project_id,&#10;                              &quot;domain&quot;: &quot;cloud-native&quot;,&#10;                              &quot;project_context&quot;: &quot;Test context&quot;,&#10;                              &quot;llm_provider&quot;: &quot;deepseek&quot;&#10;                          },&#10;                          files={&quot;file&quot;: (&quot;test.txt&quot;, test_file_content, &quot;text/plain&quot;)}&#10;                      )&#10;&#10;                      assert response.status_code == status.HTTP_201_CREATED&#10;                      data = response.json()&#10;                      assert &quot;session_id&quot; in data&#10;                      assert data[&quot;project_id&quot;] == project_id&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:104&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 104
+      @pytest.mark.asyncio
+      async def test_start_architecture_workflow(self, client: AsyncClient, sample_project_data):
+          """Test starting an architecture workflow."""
+          # Create a project first
+          project_response = await client.post("/api/v1/projects/", json=sample_project_data)
+          project_id = project_response.json()["id"]
+
+          # Mock file upload
+          with patch('app.core.file_storage.FileStorage.save_uploaded_file') as mock_save:
+              mock_save.return_value = {
+                  "file_id": "test-file-id",
+                  "file_path": "/test/path/document.txt"
+              }
+
+              with patch('app.workflows.architecture_workflow.ArchitectureWorkflow.start') as mock_start:
+                  mock_start.return_value = ("test-session-id", {"status": "started"})
+
+                  with patch('app.core.file_storage.FileStorage.move_to_processed'):
+                      # Create a test file
+                      test_file_content = b"Test document content"
+
+                      response = await client.post(
+                          "/api/v1/workflows/start-architecture",
+                          data={
+                              "project_id": project_id,
+                              "domain": "cloud-native",
+                              "project_context": "Test context",
+                              "llm_provider": "deepseek"
+                          },
+                          files={"file": ("test.txt", test_file_content, "text/plain")}
+                      )
+
+                      assert response.status_code == status.HTTP_201_CREATED
+                      data = response.json()
+                      assert "session_id" in data
+                      assert data["project_id"] == project_id
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:104</error></testcase><testcase classname="tests.unit.test_api.TestWorkflowEndpoints" name="test_get_workflow_status" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 141&#10;      @pytest.mark.asyncio&#10;      async def test_get_workflow_status(self, client: AsyncClient, sample_workflow_data):&#10;          &quot;&quot;&quot;Test getting workflow status.&quot;&quot;&quot;&#10;          # Mock the workflow status&#10;          with patch('app.api.v1.workflows.get_workflow_from_db') as mock_get:&#10;              mock_workflow = MagicMock()&#10;              mock_workflow.id = &quot;test-session-id&quot;&#10;              mock_workflow.current_stage = &quot;starting&quot;&#10;              mock_workflow.state_data = sample_workflow_data[&quot;state_data&quot;]&#10;              mock_workflow.is_active = True&#10;              mock_get.return_value = mock_workflow&#10;&#10;              response = await client.get(&quot;/api/v1/workflows/test-session-id/status&quot;)&#10;&#10;              assert response.status_code == status.HTTP_200_OK&#10;              data = response.json()&#10;              assert data[&quot;session_id&quot;] == &quot;test-session-id&quot;&#10;              assert data[&quot;current_stage&quot;] == &quot;starting&quot;&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:141&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 141
+      @pytest.mark.asyncio
+      async def test_get_workflow_status(self, client: AsyncClient, sample_workflow_data):
+          """Test getting workflow status."""
+          # Mock the workflow status
+          with patch('app.api.v1.workflows.get_workflow_from_db') as mock_get:
+              mock_workflow = MagicMock()
+              mock_workflow.id = "test-session-id"
+              mock_workflow.current_stage = "starting"
+              mock_workflow.state_data = sample_workflow_data["state_data"]
+              mock_workflow.is_active = True
+              mock_get.return_value = mock_workflow
+
+              response = await client.get("/api/v1/workflows/test-session-id/status")
+
+              assert response.status_code == status.HTTP_200_OK
+              data = response.json()
+              assert data["session_id"] == "test-session-id"
+              assert data["current_stage"] == "starting"
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:141</error></testcase><testcase classname="tests.unit.test_api.TestWorkflowEndpoints" name="test_get_workflow_requirements" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 160&#10;      @pytest.mark.asyncio&#10;      async def test_get_workflow_requirements(self, client: AsyncClient, sample_requirements_data):&#10;          &quot;&quot;&quot;Test getting workflow requirements.&quot;&quot;&quot;&#10;          with patch('app.api.v1.workflows.get_workflow_from_db') as mock_get:&#10;              mock_workflow = MagicMock()&#10;              mock_workflow.id = &quot;test-session-id&quot;&#10;              mock_workflow.state_data = {&quot;requirements&quot;: sample_requirements_data}&#10;              mock_get.return_value = mock_workflow&#10;&#10;              response = await client.get(&quot;/api/v1/workflows/test-session-id/requirements&quot;)&#10;&#10;              assert response.status_code == status.HTTP_200_OK&#10;              data = response.json()&#10;              assert &quot;requirements&quot; in data&#10;              assert data[&quot;requirements&quot;][&quot;structured_requirements&quot;][&quot;business_goals&quot;] == [&quot;Launch online marketplace&quot;, &quot;Increase revenue&quot;]&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:160&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 160
+      @pytest.mark.asyncio
+      async def test_get_workflow_requirements(self, client: AsyncClient, sample_requirements_data):
+          """Test getting workflow requirements."""
+          with patch('app.api.v1.workflows.get_workflow_from_db') as mock_get:
+              mock_workflow = MagicMock()
+              mock_workflow.id = "test-session-id"
+              mock_workflow.state_data = {"requirements": sample_requirements_data}
+              mock_get.return_value = mock_workflow
+
+              response = await client.get("/api/v1/workflows/test-session-id/requirements")
+
+              assert response.status_code == status.HTTP_200_OK
+              data = response.json()
+              assert "requirements" in data
+              assert data["requirements"]["structured_requirements"]["business_goals"] == ["Launch online marketplace", "Increase revenue"]
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:160</error></testcase><testcase classname="tests.unit.test_api.TestWorkflowEndpoints" name="test_get_workflow_architecture" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 176&#10;      @pytest.mark.asyncio&#10;      async def test_get_workflow_architecture(self, client: AsyncClient, sample_architecture_data):&#10;          &quot;&quot;&quot;Test getting workflow architecture.&quot;&quot;&quot;&#10;          with patch('app.api.v1.workflows.get_workflow_from_db') as mock_get:&#10;              mock_workflow = MagicMock()&#10;              mock_workflow.id = &quot;test-session-id&quot;&#10;              mock_workflow.state_data = {&quot;architecture&quot;: sample_architecture_data}&#10;              mock_get.return_value = mock_workflow&#10;&#10;              response = await client.get(&quot;/api/v1/workflows/test-session-id/architecture&quot;)&#10;&#10;              assert response.status_code == status.HTTP_200_OK&#10;              data = response.json()&#10;              assert &quot;architecture&quot; in data&#10;              assert data[&quot;architecture&quot;][&quot;overview&quot;] == &quot;Microservices-based e-commerce platform&quot;&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:176&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 176
+      @pytest.mark.asyncio
+      async def test_get_workflow_architecture(self, client: AsyncClient, sample_architecture_data):
+          """Test getting workflow architecture."""
+          with patch('app.api.v1.workflows.get_workflow_from_db') as mock_get:
+              mock_workflow = MagicMock()
+              mock_workflow.id = "test-session-id"
+              mock_workflow.state_data = {"architecture": sample_architecture_data}
+              mock_get.return_value = mock_workflow
+
+              response = await client.get("/api/v1/workflows/test-session-id/architecture")
+
+              assert response.status_code == status.HTTP_200_OK
+              data = response.json()
+              assert "architecture" in data
+              assert data["architecture"]["overview"] == "Microservices-based e-commerce platform"
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:176</error></testcase><testcase classname="tests.unit.test_api.TestWorkflowEndpoints" name="test_submit_workflow_review" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 192&#10;      @pytest.mark.asyncio&#10;      async def test_submit_workflow_review(self, client: AsyncClient):&#10;          &quot;&quot;&quot;Test submitting workflow review.&quot;&quot;&quot;&#10;          with patch('app.workflows.architecture_workflow.ArchitectureWorkflow.continue_workflow') as mock_continue:&#10;              mock_continue.return_value = {&#10;                  &quot;current_stage&quot;: &quot;design_architecture&quot;,&#10;                  &quot;last_updated&quot;: &quot;2024-01-01T00:00:00Z&quot;&#10;              }&#10;&#10;              response = await client.post(&#10;                  &quot;/api/v1/workflows/test-session-id/review&quot;,&#10;                  data={&#10;                      &quot;decision&quot;: &quot;approved&quot;,&#10;                      &quot;comments&quot;: &quot;Looks good&quot;,&#10;                      &quot;constraints&quot;: &quot;{}&quot;,&#10;                      &quot;preferences&quot;: &quot;[]&quot;&#10;                  }&#10;              )&#10;&#10;              assert response.status_code == status.HTTP_200_OK&#10;              data = response.json()&#10;              assert data[&quot;session_id&quot;] == &quot;test-session-id&quot;&#10;              assert data[&quot;feedback_submitted&quot;] is True&#10;              assert data[&quot;decision&quot;] == &quot;approved&quot;&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:192&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 192
+      @pytest.mark.asyncio
+      async def test_submit_workflow_review(self, client: AsyncClient):
+          """Test submitting workflow review."""
+          with patch('app.workflows.architecture_workflow.ArchitectureWorkflow.continue_workflow') as mock_continue:
+              mock_continue.return_value = {
+                  "current_stage": "design_architecture",
+                  "last_updated": "2024-01-01T00:00:00Z"
+              }
+
+              response = await client.post(
+                  "/api/v1/workflows/test-session-id/review",
+                  data={
+                      "decision": "approved",
+                      "comments": "Looks good",
+                      "constraints": "{}",
+                      "preferences": "[]"
+                  }
+              )
+
+              assert response.status_code == status.HTTP_200_OK
+              data = response.json()
+              assert data["session_id"] == "test-session-id"
+              assert data["feedback_submitted"] is True
+              assert data["decision"] == "approved"
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:192</error></testcase><testcase classname="tests.unit.test_api.TestWorkflowEndpoints" name="test_submit_workflow_review_invalid_decision" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 217&#10;      @pytest.mark.asyncio&#10;      async def test_submit_workflow_review_invalid_decision(self, client: AsyncClient):&#10;          &quot;&quot;&quot;Test submitting workflow review with invalid decision.&quot;&quot;&quot;&#10;          response = await client.post(&#10;              &quot;/api/v1/workflows/test-session-id/review&quot;,&#10;              data={&#10;                  &quot;decision&quot;: &quot;invalid_decision&quot;,&#10;                  &quot;comments&quot;: &quot;Test comment&quot;&#10;              }&#10;          )&#10;&#10;          assert response.status_code == status.HTTP_400_BAD_REQUEST&#10;          data = response.json()&#10;          assert &quot;Invalid decision&quot; in data[&quot;detail&quot;]&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:217&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 217
+      @pytest.mark.asyncio
+      async def test_submit_workflow_review_invalid_decision(self, client: AsyncClient):
+          """Test submitting workflow review with invalid decision."""
+          response = await client.post(
+              "/api/v1/workflows/test-session-id/review",
+              data={
+                  "decision": "invalid_decision",
+                  "comments": "Test comment"
+              }
+          )
+
+          assert response.status_code == status.HTTP_400_BAD_REQUEST
+          data = response.json()
+          assert "Invalid decision" in data["detail"]
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestWorkflowEndpoints::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:217</error></testcase><testcase classname="tests.unit.test_api.TestHealthEndpoint" name="test_health_check" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 236&#10;      @pytest.mark.asyncio&#10;      async def test_health_check(self, client: AsyncClient):&#10;          &quot;&quot;&quot;Test health check endpoint.&quot;&quot;&quot;&#10;          response = await client.get(&quot;/api/v1/health&quot;)&#10;&#10;          assert response.status_code == status.HTTP_200_OK&#10;          data = response.json()&#10;          assert data[&quot;status&quot;] == &quot;healthy&quot;&#10;          assert &quot;version&quot; in data&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestHealthEndpoint::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:236&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 236
+      @pytest.mark.asyncio
+      async def test_health_check(self, client: AsyncClient):
+          """Test health check endpoint."""
+          response = await client.get("/api/v1/health")
+
+          assert response.status_code == status.HTTP_200_OK
+          data = response.json()
+          assert data["status"] == "healthy"
+          assert "version" in data
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestHealthEndpoint::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:236</error></testcase><testcase classname="tests.unit.test_api.TestErrorHandling" name="test_internal_server_error" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 250&#10;      @pytest.mark.asyncio&#10;      async def test_internal_server_error(self, client: AsyncClient):&#10;          &quot;&quot;&quot;Test handling of internal server errors.&quot;&quot;&quot;&#10;          with patch('app.api.v1.projects.create_project', side_effect=Exception(&quot;Database error&quot;)):&#10;              response = await client.post(&quot;/api/v1/projects/&quot;, json={&quot;name&quot;: &quot;Test&quot;})&#10;&#10;              assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR&#10;              data = response.json()&#10;              assert &quot;error&quot; in data[&quot;detail&quot;].lower()&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestErrorHandling::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:250&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 250
+      @pytest.mark.asyncio
+      async def test_internal_server_error(self, client: AsyncClient):
+          """Test handling of internal server errors."""
+          with patch('app.api.v1.projects.create_project', side_effect=Exception("Database error")):
+              response = await client.post("/api/v1/projects/", json={"name": "Test"})
+
+              assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+              data = response.json()
+              assert "error" in data["detail"].lower()
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestErrorHandling::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:250</error></testcase><testcase classname="tests.unit.test_api.TestErrorHandling" name="test_validation_error" time="0.000"><error message="failed on setup with &quot;file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 260&#10;      @pytest.mark.asyncio&#10;      async def test_validation_error(self, client: AsyncClient):&#10;          &quot;&quot;&quot;Test handling of validation errors.&quot;&quot;&quot;&#10;          response = await client.post(&quot;/api/v1/projects/&quot;, json={&quot;invalid_field&quot;: &quot;value&quot;})&#10;&#10;          assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY&#10;E       fixture 'client' not found&#10;&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestErrorHandling::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:260&quot;">file /Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py, line 260
+      @pytest.mark.asyncio
+      async def test_validation_error(self, client: AsyncClient):
+          """Test handling of validation errors."""
+          response = await client.post("/api/v1/projects/", json={"invalid_field": "value"})
+
+          assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+E       fixture 'client' not found
+&gt;       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, cov, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_architecture_design, mock_embedding, mock_github_repository, mock_implementation_plan, mock_llm_response, mock_neo4j_result, mock_pinecone_result, mock_repository_analysis, mock_requirements_analysis, mock_workflow_summary, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_project_id, sample_session_id, temp_dir, tests/unit/test_api.py::&lt;event_loop&gt;, tests/unit/test_api.py::TestErrorHandling::&lt;event_loop&gt;, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/schwipee/dev/archMesh/archmesh-poc/backend/tests/unit/test_api.py:260</error></testcase><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_initialization_with_kb_service" time="0.004" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_initialization_without_kb_service" time="0.002" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_execute_brownfield_mode" time="0.005" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_execute_greenfield_mode" time="0.006" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_execute_requires_project_id_for_brownfield" time="0.005" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_get_brownfield_context" time="0.005"><failure message="AssertionError: assert 'similar_architectures' in {'existing_patterns': [], 'existing_services': [{'dependencies': ['user-database', 'auth-service'], 'dependents': ['payment-service'], 'service_id': 'user-service'}], 'integration_points': [], 'similar_features': [{'id': 'similar-arch-1', 'metadata': {'architecture_type': 'microservices', 'project_id': 'project-1', 'technologies': ['Node.js', 'PostgreSQL']}, 'similarity_score': 0.85}], ...}">self = &lt;test_architecture_agent_brownfield.TestArchitectureAgentBrownfield object at 0x169c33bb0&gt;
+architecture_agent = &lt;app.agents.architecture_agent.ArchitectureAgent object at 0x315971fa0&gt;
+sample_requirements = {'confidence_score': 0.9, 'structured_requirements': {'business_goals': ['Improve user experience'], 'functional_requi...ns'], 'non_functional_requirements': {'performance': ['Response time &lt; 200ms'], 'scalability': ['Support 10k users']}}}
+sample_existing_architecture = {'dependencies': [{'from': 'user-service', 'to': 'user-database', 'type': 'database-call'}], 'services': [{'descriptio... 'name': 'User Service', 'technology': 'Node.js + Express', ...}], 'technology_stack': {'Node.js': 1, 'PostgreSQL': 1}}
+
+    @pytest.mark.asyncio
+    async def test_get_brownfield_context(self, architecture_agent, sample_requirements, sample_existing_architecture):
+        """Test getting brownfield context from knowledge base."""
+        project_id = 'test-project'
+    
+        result = await architecture_agent._get_brownfield_context(
+            project_id, sample_requirements, sample_existing_architecture
+        )
+    
+        # Verify knowledge base service calls
+        architecture_agent.kb_service.search_similar_architectures.assert_called_once()
+        architecture_agent.kb_service.get_service_dependencies.assert_called_once()
+        architecture_agent.kb_service.get_context_for_new_feature.assert_called_once()
+    
+        # Verify result structure
+&gt;       assert 'similar_architectures' in result
+E       AssertionError: assert 'similar_architectures' in {'existing_patterns': [], 'existing_services': [{'dependencies': ['user-database', 'auth-service'], 'dependents': ['payment-service'], 'service_id': 'user-service'}], 'integration_points': [], 'similar_features': [{'id': 'similar-arch-1', 'metadata': {'architecture_type': 'microservices', 'project_id': 'project-1', 'technologies': ['Node.js', 'PostgreSQL']}, 'similarity_score': 0.85}], ...}
+
+tests/unit/test_architecture_agent_brownfield.py:200: AssertionError</failure></testcase><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_get_brownfield_system_prompt" time="0.004" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_build_brownfield_prompt" time="0.005" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_generate_integration_strategy" time="0.007" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_generate_brownfield_c4_diagram" time="0.005" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_assess_context_quality" time="0.004"><failure message="TypeError: '&gt;' not supported between instances of 'str' and 'float'">self = &lt;test_architecture_agent_brownfield.TestArchitectureAgentBrownfield object at 0x169c33fa0&gt;
+architecture_agent = &lt;app.agents.architecture_agent.ArchitectureAgent object at 0x3157d6b80&gt;
+
+    def test_assess_context_quality(self, architecture_agent):
+        """Test assessing the quality of brownfield context."""
+        # High quality context
+        high_quality_context = {
+            'similar_architectures': [
+                {'similarity_score': 0.9},
+                {'similarity_score': 0.8}
+            ],
+            'existing_services': [
+                {'id': 'service-1', 'technology': 'Node.js'},
+                {'id': 'service-2', 'technology': 'PostgreSQL'}
+            ],
+            'integration_patterns': [
+                {'pattern': 'event-driven'},
+                {'pattern': 'api-gateway'}
+            ],
+            'technology_consistency': 0.9
+        }
+    
+        quality = architecture_agent._assess_context_quality(high_quality_context)
+&gt;       assert quality &gt; 0.7
+E       TypeError: '&gt;' not supported between instances of 'str' and 'float'
+
+tests/unit/test_architecture_agent_brownfield.py:346: TypeError</failure></testcase><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_get_agent_capabilities_with_kb_service" time="0.004" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_get_agent_capabilities_without_kb_service" time="0.002"><failure message="AssertionError: assert 'Brownfield architecture design' not in ['System architecture design', 'Technology stack recommendations', 'C4 diagram generation', 'Alternative analysis', 'Implementation planning', 'Risk assessment', ...]">self = &lt;test_architecture_agent_brownfield.TestArchitectureAgentBrownfield object at 0x169c3f3a0&gt;
+
+    def test_get_agent_capabilities_without_kb_service(self):
+        """Test agent capabilities when knowledge base service is not available."""
+        with patch('app.config.settings') as mock_settings:
+            mock_settings.get_llm_config_for_task.return_value = ('deepseek', 'deepseek-r1')
+            agent = ArchitectureAgent()
+    
+            capabilities = agent.get_agent_capabilities()
+    
+&gt;           assert 'Brownfield architecture design' not in capabilities['capabilities']
+E           AssertionError: assert 'Brownfield architecture design' not in ['System architecture design', 'Technology stack recommendations', 'C4 diagram generation', 'Alternative analysis', 'Implementation planning', 'Risk assessment', ...]
+
+tests/unit/test_architecture_agent_brownfield.py:377: AssertionError</failure></testcase><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_execute_brownfield_with_high_confidence_context" time="0.007"><failure message="AssertionError: assert 'integration_strategy' in {'architecture': {'style': 'microservices'}, 'metadata': {'agent_version': '1.1.0', 'architecture_timestamp': None, 'context_quality': 'low', 'design_notes': ['Architecture style: unknown', 'Simple architecture with few components', 'Architecture may need refinement'], ...}}">self = &lt;test_architecture_agent_brownfield.TestArchitectureAgentBrownfield object at 0x169c3f490&gt;
+architecture_agent = &lt;app.agents.architecture_agent.ArchitectureAgent object at 0x3156e38b0&gt;
+sample_requirements = {'confidence_score': 0.9, 'structured_requirements': {'business_goals': ['Improve user experience'], 'functional_requi...ns'], 'non_functional_requirements': {'performance': ['Response time &lt; 200ms'], 'scalability': ['Support 10k users']}}}
+sample_existing_architecture = {'dependencies': [{'from': 'user-service', 'to': 'user-database', 'type': 'database-call'}], 'services': [{'descriptio... 'name': 'User Service', 'technology': 'Node.js + Express', ...}], 'technology_stack': {'Node.js': 1, 'PostgreSQL': 1}}
+
+    @pytest.mark.asyncio
+    async def test_execute_brownfield_with_high_confidence_context(self, architecture_agent, sample_requirements, sample_existing_architecture):
+        """Test brownfield execution with high confidence context."""
+        # Mock high confidence context
+        high_confidence_context = {
+            'similar_architectures': [
+                {'similarity_score': 0.9, 'metadata': {'technologies': ['Node.js']}}
+            ],
+            'existing_services': sample_existing_architecture['services'],
+            'integration_patterns': [
+                {'pattern': 'event-driven', 'confidence': 0.9}
+            ],
+            'technology_consistency': 0.95
+        }
+    
+        architecture_agent._get_brownfield_context = AsyncMock(return_value=high_confidence_context)
+        architecture_agent._call_llm = AsyncMock(return_value='{"architecture": {"style": "microservices"}}')
+        architecture_agent._parse_json_response = Mock(return_value={'architecture': {'style': 'microservices'}})
+        architecture_agent._generate_brownfield_c4_diagram = AsyncMock(return_value='graph TD')
+        architecture_agent._generate_integration_strategy = AsyncMock(return_value={'phases': []})
+        architecture_agent._validate_and_enhance_architecture = Mock(return_value={'architecture': {'style': 'microservices'}})
+    
+        input_data = {
+            'project_id': 'test-project',
+            'requirements': sample_requirements,
+            'existing_architecture': sample_existing_architecture,
+            'constraints': {},
+            'preferences': [],
+            'domain': 'e-commerce'
+        }
+    
+        result = await architecture_agent._execute_brownfield(input_data)
+    
+        assert 'architecture' in result
+&gt;       assert 'integration_strategy' in result
+E       AssertionError: assert 'integration_strategy' in {'architecture': {'style': 'microservices'}, 'metadata': {'agent_version': '1.1.0', 'architecture_timestamp': None, 'context_quality': 'low', 'design_notes': ['Architecture style: unknown', 'Simple architecture with few components', 'Architecture may need refinement'], ...}}
+
+tests/unit/test_architecture_agent_brownfield.py:414: AssertionError</failure></testcase><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_execute_brownfield_with_low_confidence_context" time="0.007" /><testcase classname="tests.unit.test_architecture_agent_brownfield.TestArchitectureAgentBrownfield" name="test_brownfield_context_with_empty_kb_service" time="0.005"><failure message="KeyError: 'similar_architectures'">self = &lt;test_architecture_agent_brownfield.TestArchitectureAgentBrownfield object at 0x169c3f970&gt;
+
+    @pytest.mark.asyncio
+    async def test_brownfield_context_with_empty_kb_service(self):
+        """Test brownfield context when knowledge base service returns empty results."""
+        mock_kb_service = Mock()
+        mock_kb_service.search_similar_architectures = AsyncMock(return_value=[])
+        mock_kb_service.get_service_dependencies = AsyncMock(return_value=[])
+        mock_kb_service.get_context_for_new_feature = AsyncMock(return_value={
+            'similar_features': [],
+            'existing_services': [],
+            'integration_patterns': []
+        })
+    
+        with patch('app.config.settings') as mock_settings:
+            mock_settings.get_llm_config_for_task.return_value = ('deepseek', 'deepseek-r1')
+            agent = ArchitectureAgent(knowledge_base_service=mock_kb_service)
+    
+            context = await agent._get_brownfield_context(
+                'test-project', {}, {}
+            )
+    
+&gt;           assert context['similar_architectures'] == []
+E           KeyError: 'similar_architectures'
+
+tests/unit/test_architecture_agent_brownfield.py:486: KeyError</failure></testcase><testcase classname="tests.unit.test_error_handling.TestErrorClasses" name="test_llm_error_creation" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestErrorClasses" name="test_llm_timeout_error" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestErrorClasses" name="test_llm_rate_limit_error" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestErrorClasses" name="test_llm_provider_error" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryConfig" name="test_retry_config_defaults" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryConfig" name="test_retry_config_custom" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackConfig" name="test_fallback_config_defaults" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackConfig" name="test_fallback_config_custom" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryDelay" name="test_calculate_retry_delay_no_jitter" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryDelay" name="test_calculate_retry_delay_with_jitter" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryDelay" name="test_calculate_retry_delay_max_delay" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryableError" name="test_retryable_error_types" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryableError" name="test_retryable_error_messages" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryableError" name="test_non_retryable_errors" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackProvider" name="test_get_fallback_provider_next" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackProvider" name="test_get_fallback_provider_disabled" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackProvider" name="test_get_fallback_provider_unknown" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackModel" name="test_get_fallback_model_next" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackModel" name="test_get_fallback_model_disabled" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestFallbackModel" name="test_get_fallback_model_unknown" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestRetryWithFallback" name="test_retry_with_fallback_success_first_attempt" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestRetryWithFallback" name="test_retry_with_fallback_success_after_retry" time="0.031" /><testcase classname="tests.unit.test_error_handling.TestRetryWithFallback" name="test_retry_with_fallback_provider_fallback" time="0.002" /><testcase classname="tests.unit.test_error_handling.TestRetryWithFallback" name="test_retry_with_fallback_all_fail" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestErrorHandler" name="test_error_handler_initialization" time="0.000" /><testcase classname="tests.unit.test_error_handling.TestErrorHandler" name="test_log_error" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestErrorHandler" name="test_get_error_stats" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestErrorHandler" name="test_circuit_breaker" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestErrorHandlingDecorator" name="test_with_error_handling_success" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestErrorHandlingDecorator" name="test_with_error_handling_default_return" time="0.001" /><testcase classname="tests.unit.test_error_handling.TestErrorHandlingDecorator" name="test_with_error_handling_raise_error" time="0.001" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_initialization" time="0.005" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_index_repository_analysis" time="0.009" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_create_searchable_chunks" time="0.005" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_create_architecture_graph" time="0.005" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_search_similar_architectures" time="0.006" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_get_service_dependencies" time="0.006" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_get_context_for_new_feature" time="0.009" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_embedding_generation" time="0.005" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_chunk_metadata_creation" time="0.004" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_search_with_filters" time="0.005" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_get_technology_recommendations" time="0.005" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_get_integration_patterns" time="0.006" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_error_handling_pinecone_failure" time="0.005" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_error_handling_neo4j_failure" time="0.006" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_chunk_size_limits" time="0.004" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_batch_operations" time="0.008" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_metadata_serialization" time="0.004" /><testcase classname="tests.unit.test_knowledge_base_service.TestKnowledgeBaseService" name="test_concurrent_operations" time="0.007" /></testsuite></testsuites>

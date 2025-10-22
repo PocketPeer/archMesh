@@ -93,25 +93,32 @@ class KnowledgeBaseService:
     def _initialize_services(self) -> None:
         """Initialize Pinecone, Neo4j, and embedding model."""
         try:
-            # Initialize Pinecone
+            # Initialize Pinecone (updated for newer API)
             if self.pinecone_api_key and self.pinecone_environment:
-                pinecone.init(
-                    api_key=self.pinecone_api_key,
-                    environment=self.pinecone_environment
-                )
-                
-                # Create or connect to index
-                if self.index_name not in pinecone.list_indexes():
-                    pinecone.create_index(
-                        name=self.index_name,
-                        dimension=self.embedding_dimension,
-                        metric="cosine",
-                        pod_type="p1.x1"  # Small pod for development
+                # For newer Pinecone versions, use PC() instead of init()
+                try:
+                    # Try new API first
+                    from pinecone import Pinecone
+                    pc = Pinecone(api_key=self.pinecone_api_key)
+                    self.index = pc.Index(self.index_name)
+                except (ImportError, AttributeError):
+                    # Fallback to old API
+                    pinecone.init(
+                        api_key=self.pinecone_api_key,
+                        environment=self.pinecone_environment
                     )
-                    logger.info(f"Created Pinecone index: {self.index_name}")
-                
-                self.index = pinecone.Index(self.index_name)
-                logger.info("Pinecone initialized successfully")
+                    # Create or connect to index
+                    if self.index_name not in pinecone.list_indexes():
+                        pinecone.create_index(
+                            name=self.index_name,
+                            dimension=self.embedding_dimension,
+                            metric="cosine",
+                            pod_type="p1.x1"  # Small pod for development
+                        )
+                        logger.info(f"Created Pinecone index: {self.index_name}")
+                    
+                    self.index = pinecone.Index(self.index_name)
+                    logger.info("Pinecone initialized successfully")
             else:
                 logger.warning("Pinecone credentials not provided, vector search disabled")
             

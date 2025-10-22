@@ -77,11 +77,12 @@ class FallbackConfig:
                  fallback_models: Optional[Dict[str, List[str]]] = None):
         self.enable_provider_fallback = enable_provider_fallback
         self.enable_model_fallback = enable_model_fallback
-        self.fallback_providers = fallback_providers or ["openai", "anthropic", "deepseek"]
+        self.fallback_providers = fallback_providers or ["openai", "anthropic", "deepseek", "ollama"]
         self.fallback_models = fallback_models or {
             "openai": ["gpt-4", "gpt-3.5-turbo"],
             "anthropic": ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
-            "deepseek": ["deepseek-r1", "deepseek-coder", "deepseek-chat"]
+            "deepseek": ["deepseek-r1", "deepseek-coder", "deepseek-chat"],
+            "ollama": ["llama3.2:3b", "llama3.2:1b", "llama3.1:8b"]
         }
 
 
@@ -234,11 +235,27 @@ async def retry_with_fallback(
                 logger.warning(f"Fallback model failed: {str(error)}")
                 last_error = error
     
-    # Try fallback providers
+    # Try fallback providers with timeout-based strategy
     if fallback_config.enable_provider_fallback:
         fallback_provider = get_fallback_provider(current_provider, fallback_config)
         if fallback_provider and fallback_provider != current_provider:
             logger.info(f"Trying fallback provider: {fallback_provider}")
+            
+            # Special handling for timeout errors - use faster local model
+            if isinstance(last_error, LLMTimeoutError) and current_provider == "deepseek":
+                logger.info("DeepSeek timeout detected, trying faster local model fallback")
+                try:
+                    # Use Ollama with a fast local model for timeout scenarios
+                    kwargs['llm_provider'] = "ollama"
+                    kwargs['llm_model'] = "llama3.2:3b"  # Fast local model
+                    kwargs['timeout_seconds'] = 30  # Shorter timeout for local model
+                    result = await func(*args, **kwargs)
+                    logger.info(f"Success with fast local model fallback: {kwargs['llm_model']}")
+                    return result
+                except Exception as error:
+                    logger.warning(f"Fast local model fallback failed: {str(error)}")
+                    # Continue with regular fallback
+            
             try:
                 kwargs['llm_provider'] = fallback_provider
                 kwargs['llm_model'] = fallback_config.fallback_models.get(fallback_provider, [""])[0]

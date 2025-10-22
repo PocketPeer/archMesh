@@ -13,6 +13,7 @@ export function ApiTestComponent() {
   const [results, setResults] = useState<{
     health?: any;
     projects?: any;
+    testProject?: any;
     error?: string;
   }>({});
 

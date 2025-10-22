@@ -120,6 +120,23 @@ export interface WorkflowStatus {
   errors: string[];
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: 'owner' | 'collaborator' | 'viewer';
+  avatar?: string | null;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'success' | 'warning' | 'error' | 'info';
+  read: boolean;
+  timestamp: string;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   data?: T;

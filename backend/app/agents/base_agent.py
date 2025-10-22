@@ -154,6 +154,11 @@ class BaseAgent(ABC):
                 llm_params["base_url"] = settings.deepseek_base_url
                 llm_params["model"] = settings.deepseek_model
                 return ChatDeepSeek(**llm_params)
+            elif self.llm_provider == "ollama":
+                # Use Ollama for fast local models
+                llm_params["base_url"] = settings.ollama_base_url
+                llm_params["model"] = self.llm_model
+                return ChatDeepSeek(**llm_params)
             else:
                 raise ValueError(f"Unsupported LLM provider: {self.llm_provider}")
                 
@@ -275,7 +280,7 @@ class BaseAgent(ABC):
 
     def _parse_json_response(self, response: str) -> Dict[str, Any]:
         """
-        Parse JSON from LLM response, handling markdown code blocks.
+        Parse JSON from LLM response, handling markdown code blocks and malformed JSON.
         
         Args:
             response: Raw LLM response text
@@ -286,11 +291,13 @@ class BaseAgent(ABC):
         Raises:
             ValueError: If JSON parsing fails
         """
+        logger.debug(f"Parsing JSON response: {response[:200]}...")
+        
         try:
             # First, try to parse as-is
             return json.loads(response)
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning(f"Direct JSON parsing failed: {e}")
         
         # Try to extract JSON from markdown code blocks
         json_patterns = [
@@ -315,8 +322,80 @@ class BaseAgent(ABC):
             except json.JSONDecodeError:
                 pass
         
-        # If all else fails, raise an error
-        raise ValueError(f"Could not parse JSON from response: {response[:500]}...")
+        # Try to find JSON at the beginning of the response
+        lines = response.strip().split('\n')
+        json_start = -1
+        json_end = -1
+        
+        for i, line in enumerate(lines):
+            if line.strip().startswith('{'):
+                json_start = i
+                break
+        
+        if json_start >= 0:
+            # Find the matching closing brace
+            brace_count = 0
+            for i in range(json_start, len(lines)):
+                line = lines[i].strip()
+                for char in line:
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            json_end = i
+                            break
+                if json_end >= 0:
+                    break
+            
+            if json_end >= 0:
+                json_lines = lines[json_start:json_end + 1]
+                json_text = '\n'.join(json_lines)
+                try:
+                    return json.loads(json_text)
+                except json.JSONDecodeError:
+                    pass
+        
+        # Try to fix common JSON issues
+        try:
+            # Remove any trailing commas or incomplete structures
+            cleaned_response = response.strip()
+            
+            # Try to find the last complete JSON object
+            brace_count = 0
+            last_brace = -1
+            for i, char in enumerate(cleaned_response):
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        last_brace = i
+                        break
+            
+            if last_brace > 0:
+                json_part = cleaned_response[:last_brace + 1]
+                try:
+                    return json.loads(json_part)
+                except json.JSONDecodeError:
+                    pass
+            
+            # Try to fix incomplete JSON by adding missing closing braces
+            if cleaned_response.count('{') > cleaned_response.count('}'):
+                missing_braces = cleaned_response.count('{') - cleaned_response.count('}')
+                fixed_response = cleaned_response + '}' * missing_braces
+                try:
+                    return json.loads(fixed_response)
+                except json.JSONDecodeError:
+                    pass
+                    
+        except Exception as e:
+            logger.warning(f"JSON repair attempt failed: {e}")
+        
+        # If all else fails, raise an error with more context
+        logger.error(f"Could not parse JSON from response. Response length: {len(response)}")
+        logger.error(f"Response content: {response[:1000]}...")
+        raise ValueError(f"Could not parse JSON from response. Response: {response[:500]}...")
 
     async def log_execution(
         self,

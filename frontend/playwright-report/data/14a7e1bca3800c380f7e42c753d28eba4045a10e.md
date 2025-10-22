@@ -1,0 +1,80 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "ArchMesh" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - heading "ArchMesh" [level=1] [ref=e8]
+        - generic [ref=e9]:
+          - link "Home" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+            - generic [ref=e14]: Home
+          - button "Demos" [ref=e15]:
+            - generic [ref=e16]: Demos
+          - button [ref=e18]:
+            - img
+          - generic [ref=e19]:
+            - link "Sign in" [ref=e20] [cursor=pointer]:
+              - /url: /login
+              - button "Sign in" [ref=e21]
+            - link "Sign up" [ref=e22] [cursor=pointer]:
+              - /url: /register
+              - button "Sign up" [active] [ref=e23]
+    - main [ref=e24]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - heading "ArchMesh" [level=1] [ref=e28]
+          - paragraph [ref=e29]: AI-powered architecture design platform
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e32]: Create your account
+            - generic [ref=e33]: Join ArchMesh to start designing AI-powered architectures
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - text: Full name
+                - textbox "Full name" [ref=e37]:
+                  - /placeholder: Enter your full name
+              - generic [ref=e38]:
+                - text: Email address
+                - textbox "Email address" [ref=e39]:
+                  - /placeholder: Enter your email
+              - generic [ref=e40]:
+                - text: Password
+                - generic [ref=e41]:
+                  - textbox "Password" [ref=e42]:
+                    - /placeholder: Create a password
+                  - button [ref=e43]:
+                    - img
+              - generic [ref=e44]:
+                - text: Confirm password
+                - generic [ref=e45]:
+                  - textbox "Confirm password" [ref=e46]:
+                    - /placeholder: Confirm your password
+                  - button [ref=e47]:
+                    - img
+              - button "Create account" [disabled]
+            - paragraph [ref=e49]:
+              - text: Already have an account?
+              - link "Sign in" [ref=e50] [cursor=pointer]:
+                - /url: /login
+  - generic [ref=e54]:
+    - generic [ref=e55]:
+      - img [ref=e56]
+      - text: AI Assistant
+      - img [ref=e58]
+    - generic [ref=e62]:
+      - button "DeepSeek R1" [ref=e63]:
+        - text: DeepSeek R1
+        - img
+      - button "+" [ref=e64]
+      - button "×" [ref=e65]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e71] [cursor=pointer]:
+    - img [ref=e72]
+  - alert [ref=e76]
+```

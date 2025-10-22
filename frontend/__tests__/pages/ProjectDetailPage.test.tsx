@@ -128,7 +128,7 @@ describe('ProjectDetailPage', () => {
     render(<ProjectDetailPage />);
     
     await waitFor(() => {
-      expect(screen.getByText('Test Project')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
       expect(screen.getByText('Test Description')).toBeInTheDocument();
     });
   });
@@ -264,11 +264,18 @@ describe('ProjectDetailPage', () => {
     
     const { apiClient } = require('@/lib/api-client');
     apiClient.getProject.mockResolvedValue(brownfieldProject);
+    apiClient.listWorkflows.mockResolvedValue({ items: [] });
     
     render(<ProjectDetailPage />);
     
+    // Wait for project to load first
     await waitFor(() => {
-      expect(screen.getByTestId('architecture-comparison')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
+    });
+    
+    // Then check for architecture comparison
+    await waitFor(() => {
+      expect(screen.getByText('Architecture Comparison')).toBeInTheDocument();
     });
   });
 
@@ -310,11 +317,18 @@ describe('ProjectDetailPage', () => {
     
     const { apiClient } = require('@/lib/api-client');
     apiClient.getProject.mockResolvedValue(brownfieldProject);
+    apiClient.listWorkflows.mockResolvedValue({ items: [] });
     
     render(<ProjectDetailPage />);
     
+    // Wait for project to load first
     await waitFor(() => {
-      expect(screen.getByTestId('architecture-comparison')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
+    });
+    
+    // Then check for architecture comparison
+    await waitFor(() => {
+      expect(screen.getByText('Architecture Comparison')).toBeInTheDocument();
     });
     
     const approveButton = screen.getByText('Approve');
@@ -364,11 +378,18 @@ describe('ProjectDetailPage', () => {
     
     const { apiClient } = require('@/lib/api-client');
     apiClient.getProject.mockResolvedValue(brownfieldProject);
+    apiClient.listWorkflows.mockResolvedValue({ items: [] });
     
     render(<ProjectDetailPage />);
     
+    // Wait for project to load first
     await waitFor(() => {
-      expect(screen.getByTestId('architecture-comparison')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
+    });
+    
+    // Then check for architecture comparison
+    await waitFor(() => {
+      expect(screen.getByText('Architecture Comparison')).toBeInTheDocument();
     });
     
     const rejectButton = screen.getByText('Reject');
@@ -387,8 +408,11 @@ describe('ProjectDetailPage', () => {
     render(<ProjectDetailPage />);
     
     // Check for loading skeleton elements
-    expect(screen.getByText('Test Project')).not.toBeInTheDocument();
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.queryByText('Test Project')).not.toBeInTheDocument();
+    // The component shows a loading skeleton with animate-pulse class
+    expect(screen.getByText((content, element) => {
+      return element?.classList.contains('animate-pulse') || false;
+    })).toBeInTheDocument();
   });
 
   it('shows error state when project not found', async () => {

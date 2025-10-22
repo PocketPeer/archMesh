@@ -186,7 +186,7 @@ export const mockImpactAnalysis = {
 // Helper functions
 export const waitFor = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-export const mockApiResponse = <T>(data: T, delay = 0) => {
+export const mockApiResponse = <T,>(data: T, delay = 0) => {
   return new Promise<T>(resolve => {
     setTimeout(() => resolve(data), delay)
   })

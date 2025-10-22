@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Changes Panel Component.
  * 
@@ -160,16 +162,16 @@ export const ChangesPanel: React.FC<ChangesPanelProps> = ({
             <div className="flex items-center space-x-3">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
-                style={{ backgroundColor: CHANGE_COLORS[change.type] }}
+                style={{ backgroundColor: CHANGE_COLORS[change.type as keyof typeof CHANGE_COLORS] }}
               >
-                {CHANGE_ICONS[change.type]}
+                {CHANGE_ICONS[change.type as keyof typeof CHANGE_ICONS]}
               </div>
               
               <div>
                 <div className="flex items-center space-x-2">
                   <h4 className="font-medium text-gray-900">{change.name}</h4>
                   {change.breakingChange && (
-                    <AlertTriangle className="w-4 h-4 text-red-500" title="Breaking Change" />
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
                   )}
                 </div>
                 <p className="text-sm text-gray-600">{change.description}</p>
@@ -180,11 +182,11 @@ export const ChangesPanel: React.FC<ChangesPanelProps> = ({
               <div
                 className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium"
                 style={{ 
-                  backgroundColor: `${IMPACT_COLORS[change.impact]}20`,
-                  color: IMPACT_COLORS[change.impact]
+                  backgroundColor: `${IMPACT_COLORS[change.impact as keyof typeof IMPACT_COLORS]}20`,
+                  color: IMPACT_COLORS[change.impact as keyof typeof IMPACT_COLORS]
                 }}
               >
-                <span>{IMPACT_ICONS[change.impact]}</span>
+                <span>{IMPACT_ICONS[change.impact as keyof typeof IMPACT_ICONS]}</span>
                 <span>{change.impact}</span>
               </div>
               
